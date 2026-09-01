@@ -43,9 +43,24 @@ export default async function categoriesRoutes(app: FastifyInstance) {
         trend: trendByCategory.get(c.category),
       }));
 
+      // categories_summary itself needs no committed_at (matches every
+      // other unfiltered summary in this codebase), but the attached
+      // trends structurally do - so the envelope's own completeness must
+      // reflect whichever trend(s) excluded orders, not just default to
+      // COMPLETE (the exact bug already fixed once in catalog-service's
+      // own orders_trend() - see its commit message - but that fix only
+      // guarantees the per-trend count is honest, not that a caller
+      // embedding it into a larger envelope actually reads it).
+      const trendExclusions = trendEntries.reduce(
+        (sum, [, trend]) => sum + trend.orders_excluded_missing_commit_date, 0);
+
       return reply.send(
         envelope(categoriesWithTrend, {
-          source: "catalog-service order_details/item", filters: { ...f }, period, completeness: "COMPLETE",
+          source: "catalog-service order_details/item", filters: { ...f }, period,
+          completeness: trendExclusions > 0 ? "PARTIAL" : "COMPLETE",
+          completeness_note: trendExclusions > 0
+            ? `${trendExclusions} order(s) excluded from category trend(s) - no commit date recorded`
+            : undefined,
         }),
       );
     } catch (err) {
