@@ -103,6 +103,24 @@ export const itemsPerOrderHistogram = [
   { bucket: "1-5", order_count: 9 },
 ];
 
+// Phase 8: one customer's committed order history (oldest first) and the
+// order-count trend for that same customer - both new catalogClient calls
+// wired into customerDetail.ts.
+export const customerOrderHistory = [
+  { order_nb: "O1", order_type: "standard", committed_at: "2026-06-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
+  { order_nb: "O2", order_type: "standard", committed_at: "2026-07-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
+  { order_nb: "O3", order_type: "standard", committed_at: "2026-08-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
+];
+
+export const ordersTrend = {
+  points: [
+    { bucket: "2026-06", order_count: 1, order_line_count: 2, item_quantity: "5" },
+    { bucket: "2026-07", order_count: 1, order_line_count: 2, item_quantity: "5" },
+    { bucket: "2026-08", order_count: 1, order_line_count: 2, item_quantity: "5" },
+  ],
+  orders_excluded_missing_commit_date: 0,
+};
+
 export function mockAllClients() {
   vi.doMock("../src/lib/backendClient.js", () => ({
     getAuthMe: vi.fn().mockResolvedValue(adminAuthMe),
@@ -123,5 +141,7 @@ export function mockAllClients() {
     getItemSummary: vi.fn().mockResolvedValue(itemDetailSummary),
     getCatalogDataHealth: vi.fn().mockResolvedValue(catalogDataHealth),
     getItemsPerOrderHistogram: vi.fn().mockResolvedValue(itemsPerOrderHistogram),
+    getCustomerOrderHistory: vi.fn().mockResolvedValue(customerOrderHistory),
+    getOrdersTrend: vi.fn().mockResolvedValue(ordersTrend),
   }));
 }

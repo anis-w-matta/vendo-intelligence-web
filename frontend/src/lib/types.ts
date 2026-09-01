@@ -105,6 +105,52 @@ export interface Backlog {
   age_buckets: Record<string, number>;
 }
 
+// Phase 8: the exact six activity states computed by
+// backend/src/lib/customerActivity.ts from one customer's real committed
+// order history - rendered verbatim, never re-derived or predicted here.
+export type ActivityState = "New" | "Active" | "Stable" | "Declining" | "Dormant" | "Insufficient Data";
+
+// Mirrors backend/src/lib/customerActivity.ts's IntervalStats exactly -
+// every field is null (not a fabricated zero) when there isn't enough
+// order history to compute it.
+export interface IntervalStats {
+  orderCount: number;
+  avgIntervalDays: number | null;
+  medianIntervalDays: number | null;
+  recentIntervalDays: number | null;
+  longestGapDays: number | null;
+  activeDays: number | null;
+  daysSinceLastOrder: number | null;
+}
+
+export interface QuantityAnomalySignal {
+  type: "quantity_anomaly";
+  mostRecentQuantity: number;
+  priorAverageQuantity: number;
+  ratio: number;
+}
+
+export interface LongGapSignal {
+  type: "long_gap";
+  daysSinceLastOrder: number;
+  baselineIntervalDays: number;
+}
+
+// Evidence, never a verdict - render as "Investigate: ..." prompts only.
+export type ActivitySignal = QuantityAnomalySignal | LongGapSignal;
+
+export interface OrderTrendPoint {
+  bucket: string;
+  order_count: number;
+  order_line_count: number;
+  item_quantity: string;
+}
+
+export interface CustomerOrderTrend {
+  points: OrderTrendPoint[];
+  orders_excluded_missing_commit_date: number;
+}
+
 export interface CustomerDetailData {
   customer: {
     cust_nb: string;
@@ -121,6 +167,11 @@ export interface CustomerDetailData {
     status_counts: StatusCount[];
     backlog: Backlog;
   };
+  activity_state: ActivityState;
+  interval_stats: IntervalStats;
+  signals: ActivitySignal[];
+  top_items: TopItemRow[];
+  order_trend: CustomerOrderTrend;
 }
 
 export interface TopItemRow {

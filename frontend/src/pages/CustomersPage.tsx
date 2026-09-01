@@ -10,7 +10,7 @@ import { ChartContainer } from "../components/charts/ChartContainer";
 import { RankingChart } from "../components/charts/RankingChart";
 import { DataTable, type Column } from "../components/DataTable";
 import { formatNumber } from "../lib/format";
-import type { TopCustomerRow } from "../lib/types";
+import type { SalesmanRow, TopCustomerRow } from "../lib/types";
 
 const columns: Column<TopCustomerRow>[] = [
   { key: "name", header: "Customer", render: (r) => <Link to={`/customers/${r.cust_nb}`}>{r.customer_name}</Link> },
@@ -19,9 +19,19 @@ const columns: Column<TopCustomerRow>[] = [
   { key: "qty", header: "Item Qty", align: "right", render: (r) => formatNumber(r.item_quantity) },
 ];
 
+const salesmanCustomerColumns: Column<SalesmanRow>[] = [
+  { key: "name", header: "Salesman", render: (r) => <Link to={`/salesmen/${r.salesman_id}`}>{r.salesman_name ?? r.salesman_id}</Link> },
+  { key: "customers", header: "Customers", align: "right", render: (r) => formatNumber(r.customer_count) },
+];
+
 export function CustomersPage() {
   const [filters, setFilters] = useFilters();
   const state = useApiQuery(() => api.customers(filters), [JSON.stringify(filters)]);
+  // Reuses the existing /salesmen endpoint's customer_count per salesman
+  // (already computed by Phase 6/7) - not recomputed here, and not the
+  // fleet-wide active/inactive classification, which is a separate, larger
+  // problem left as the honest "not computed in this pass" caveat below.
+  const salesmenState = useApiQuery(() => api.salesmen(filters), [JSON.stringify(filters)]);
 
   return (
     <>
@@ -69,6 +79,31 @@ export function CustomersPage() {
             </div>
           </>
         )}
+      </QueryBoundary>
+
+      <QueryBoundary state={salesmenState}>
+        {(salesmenEnv) => {
+          const bySalesman = [...salesmenEnv.data].sort((a, b) => b.customer_count - a.customer_count);
+          return (
+            <div className="chart-grid" style={{ marginTop: 20 }}>
+              <ChartContainer
+                title="Customers per Salesman"
+                source={salesmenEnv.meta.source}
+                completeness={salesmenEnv.meta.completeness}
+                completenessNote={salesmenEnv.meta.completeness_note}
+              >
+                <RankingChart
+                  rows={bySalesman.map((r) => ({ label: r.salesman_name ?? r.salesman_id, value: r.customer_count }))}
+                  valueLabel="Customers"
+                />
+              </ChartContainer>
+              <div className="card">
+                <div className="section-title">Customers per Salesman</div>
+                <DataTable columns={salesmanCustomerColumns} rows={bySalesman} getRowKey={(r) => r.salesman_id} />
+              </div>
+            </div>
+          );
+        }}
       </QueryBoundary>
     </>
   );
