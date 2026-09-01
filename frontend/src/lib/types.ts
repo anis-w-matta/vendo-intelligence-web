@@ -48,10 +48,51 @@ export interface SalesmanRow {
   item_quantity: string;
   customer_count: number;
   orders_per_customer: number | null;
+  // Phase 7: items/customer, items/order.
+  items_per_customer: number | null;
+  items_per_order: number | null;
   rejection_rate: number | null;
   median_turnaround_seconds: number | null;
   ai_correction_rate: number | null;
   request_count: number;
+}
+
+// Phase 7: this salesman's own numbers vs. the fleet's - an investigation
+// signal (median/mean across active salesmen today), never a performance
+// verdict. sample_size is how many active salesmen it was computed over.
+export interface FleetAverage {
+  sample_size: number;
+  order_count: number | null;
+  item_quantity: number | null;
+  customer_count: number | null;
+  rejection_rate: number | null;
+  median_turnaround_seconds: number | null;
+}
+
+export interface OrdersTrendPoint {
+  bucket: string;
+  order_count: number;
+  order_line_count: number;
+  item_quantity: string;
+}
+
+export interface RequestVolumePoint {
+  day: string;
+  status: string;
+  count: number;
+}
+
+export interface RequestVolumeTrendPoint {
+  bucket: string;
+  count: number;
+}
+
+export interface RequestsSummaryData {
+  status_counts: StatusCount[];
+  backlog: Backlog;
+  turnaround: TurnaroundStats;
+  rejection: RejectionStats;
+  volume_over_time: RequestVolumePoint[];
 }
 
 export interface SalesmanDetail {
@@ -62,11 +103,20 @@ export interface SalesmanDetail {
   order_line_count: number;
   item_quantity: string;
   customer_count: number;
+  // Phase 7: orders/customer, items/customer, items/order (same
+  // arithmetic as SalesmanRow above).
+  orders_per_customer: number | null;
+  items_per_customer: number | null;
+  items_per_order: number | null;
   request_count: number;
   rejection_rate: number | null;
   median_turnaround_seconds: number | null;
   ai_correction_rate: number | null;
   top_customers: TopCustomerRow[];
+  fleet_average: FleetAverage;
+  orders_trend: OrdersTrendPoint[];
+  requests_summary: RequestsSummaryData;
+  request_volume_trend: RequestVolumeTrendPoint[];
 }
 
 export interface TopCustomerRow {

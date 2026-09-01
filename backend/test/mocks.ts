@@ -103,6 +103,8 @@ export const itemsPerOrderHistogram = [
   { bucket: "1-5", order_count: 9 },
 ];
 
+// Shared trend-chart mock (Phase 6 Command Center fleet trend, Phase 7
+// salesman-detail trend, Phase 8 customer-detail trend - same shape).
 export const ordersTrend = {
   points: [
     { bucket: "2026-07", order_count: 4, order_line_count: 10, item_quantity: "60" },
