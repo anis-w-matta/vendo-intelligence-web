@@ -1,5 +1,6 @@
 import { pathToFileURL } from "node:url";
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import { config } from "./config.js";
 import overviewRoutes from "./routes/overview.js";
 import salesmenRoutes from "./routes/salesmen.js";
@@ -17,6 +18,12 @@ import dataHealthRoutes from "./routes/dataHealth.js";
 
 export function buildApp() {
   const app = Fastify({ logger: true });
+
+  // Same permissive dev convention as the existing backend's own
+  // CORSMiddleware(allow_origins=["*"]) (app/main.py) - the React app is
+  // a separate origin (Vite dev server / a static host) hitting this BFF
+  // directly, never Postgres.
+  app.register(cors, { origin: true });
 
   app.get("/health", async () => ({ status: "ok" }));
 

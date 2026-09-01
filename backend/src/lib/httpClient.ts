@@ -20,10 +20,16 @@ export interface HttpClientOptions {
   authorization?: string;
 }
 
-function buildUrl(baseUrl: string, path: string, params?: Record<string, unknown>): URL {
+// `params?: object` (not `Record<string, unknown>`) deliberately - a
+// concrete DTO interface like OrdersFilterParams has no index signature,
+// so TS's strict mode refuses to pass it where Record<string, unknown> is
+// expected even though every access below is a plain Object.entries walk.
+// `object` accepts any such interface; the cast just below is where the
+// actual (safe, read-only) unknown-shape iteration happens.
+function buildUrl(baseUrl: string, path: string, params?: object): URL {
   const url = new URL(path, baseUrl);
   if (params) {
-    for (const [k, v] of Object.entries(params)) {
+    for (const [k, v] of Object.entries(params as Record<string, unknown>)) {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
     }
   }
@@ -33,7 +39,7 @@ function buildUrl(baseUrl: string, path: string, params?: Record<string, unknown
 export async function getJson<T>(
   opts: HttpClientOptions,
   path: string,
-  params?: Record<string, unknown>,
+  params?: object,
 ): Promise<T> {
   const url = buildUrl(opts.baseUrl, path, params);
   const headers: Record<string, string> = {};

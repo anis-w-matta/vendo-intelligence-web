@@ -91,13 +91,49 @@ export interface RankedItemOut {
 export function getTopItems(
   orderBy: "quantity" | "order_frequency",
   limit: number,
-  params: Pick<OrdersFilterParams, "date_from" | "date_to" | "category" | "salesman_id">,
+  params: Pick<OrdersFilterParams, "date_from" | "date_to" | "category" | "salesman_id" | "cust_nb">,
 ): Promise<RankedItemOut[]> {
   return getJson<RankedItemOut[]>(client, "/analytics/top-items", {
     order_by: orderBy,
     limit,
     ...params,
   });
+}
+
+export interface TrendPointOut {
+  bucket: string;
+  order_count: number;
+  order_line_count: number;
+  item_quantity: string;
+}
+
+export interface OrdersTrendOut {
+  points: TrendPointOut[];
+  orders_excluded_missing_commit_date: number;
+}
+
+// Monthly order/line/quantity trend - fleet-wide (Phase 6) or scoped via
+// params.salesman_id (Phase 7, same point-in-time ownership attribution as
+// getSalesmenOrderMetrics).
+export function getOrdersTrend(params: OrdersFilterParams): Promise<OrdersTrendOut> {
+  return getJson<OrdersTrendOut>(client, "/analytics/orders-trend", params);
+}
+
+export interface CustomerOrderHistoryRowOut {
+  order_nb: string;
+  order_type: string;
+  committed_at: string;
+  item_quantity: string;
+  order_line_count: number;
+}
+
+// One customer's committed orders, oldest first - raw material for Phase
+// 8's frequency/interval/activity-state classification (computed in the
+// BFF from this list, never invented here or in catalog-service).
+export function getCustomerOrderHistory(custNb: string): Promise<CustomerOrderHistoryRowOut[]> {
+  return getJson<CustomerOrderHistoryRowOut[]>(
+    client, `/analytics/customers/${encodeURIComponent(custNb)}/order-history`,
+  );
 }
 
 export interface CategorySummaryOut {
