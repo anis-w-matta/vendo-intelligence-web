@@ -288,11 +288,39 @@ export interface RejectionStats {
   previous_period_rejection_rate: number | null;
 }
 
+// Phase 10: aggregate-only ActivityLog analytics (hour-of-day, event
+// type, day volume) - mirrors backend/src/lib/backendClient.ts's
+// ActivitySummaryOut verbatim. Hours are UTC, not business-local time -
+// see the completeness_note rendered alongside this on OperationsPage.
+export interface HourCount {
+  hour: number;
+  count: number;
+}
+
+export interface EventTypeCount {
+  event_type: string;
+  count: number;
+}
+
+export interface ActivityVolumePoint {
+  day: string;
+  count: number;
+}
+
+export interface ActivitySummaryData {
+  by_hour: HourCount[];
+  by_event_type: EventTypeCount[];
+  volume_over_time: ActivityVolumePoint[];
+}
+
 export interface OperationsPageData {
+  status_counts: StatusCount[];
   backlog: Backlog;
   turnaround: TurnaroundStats;
   rejection: RejectionStats;
   rejection_by_salesman: { salesman_id: string; rejection_rate: number | null; request_count: number }[];
+  volume_over_time: RequestVolumePoint[];
+  activity: ActivitySummaryData;
   sla_compliance: null;
 }
 

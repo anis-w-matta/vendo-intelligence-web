@@ -24,7 +24,7 @@ export const requestsSummary = {
     { status: "rejected", count: 2 },
     { status: "committed", count: 5 },
   ],
-  backlog: { total: 3, oldest_created_at: "2026-01-01T00:00:00Z", age_buckets: { "0-1d": 1, "1-3d": 2, "3-7d": 0, "7d+": 0 } },
+  backlog: { total: 3, oldest_created_at: "2026-01-01T00:00:00Z", age_buckets: { "<5m": 1, "5-10m": 0, "10-30m": 2, "30-60m": 0, "60m+": 0 } },
   turnaround: { sample_size: 7, median_seconds: 3600, avg_seconds: 4000, p75_seconds: 5000, p90_seconds: 6000, p95_seconds: 7000 },
   rejection: { sample_size: 7, rejection_rate: 2 / 7, previous_period_rejection_rate: null },
   volume_over_time: [{ day: "2026-01-01T00:00:00Z", status: "new", count: 3 }],
@@ -47,6 +47,16 @@ export const salesmenRequestMetrics = [
   { salesman_id: "sm_a", request_count: 4, rejection_rate: 0.25, median_turnaround_seconds: 3600, ai_correction_rate: 0.1 },
   { salesman_id: "sm_b", request_count: 3, rejection_rate: 0.0, median_turnaround_seconds: 1800, ai_correction_rate: 0.0 },
 ];
+
+// Phase 10: ActivityLog aggregate mock (GET /admin/analytics/activity-summary).
+export const activitySummary = {
+  by_hour: Array.from({ length: 24 }, (_, hour) => ({ hour, count: hour === 9 ? 5 : 0 })),
+  by_event_type: [
+    { event_type: "voice_received", count: 8 },
+    { event_type: "request_rejected", count: 2 },
+  ],
+  volume_over_time: [{ day: "2026-01-01T00:00:00Z", count: 10 }],
+};
 
 export const ordersSummary = {
   order_count: 10,
@@ -128,6 +138,7 @@ export function mockAllClients() {
     getRequestsSummary: vi.fn().mockResolvedValue(requestsSummary),
     getAiQualitySummary: vi.fn().mockResolvedValue(aiQualitySummary),
     getSalesmenRequestMetrics: vi.fn().mockResolvedValue(salesmenRequestMetrics),
+    getActivitySummary: vi.fn().mockResolvedValue(activitySummary),
   }));
   vi.doMock("../src/lib/catalogClient.js", () => ({
     getOrdersSummary: vi.fn().mockResolvedValue(ordersSummary),
