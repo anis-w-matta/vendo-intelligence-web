@@ -239,10 +239,18 @@ export interface DataHealthData {
   metric_dictionary: MetricDictionaryEntry[];
 }
 
+export interface OrderTrendPoint {
+  bucket: string;
+  order_count: number;
+  order_line_count: number;
+  item_quantity: string;
+}
+
 export interface OverviewData {
   kpis: Record<string, Metric<unknown>>;
   sales_by_salesman: Envelope<{ salesman_id: string; salesman_name: string | null; order_count: number; item_quantity: string }[]>;
   request_volume_over_time: Envelope<{ bucket: string; count: number }[]>;
+  order_trend: Envelope<OrderTrendPoint[]>;
   customers: Envelope<CustomersSummary>;
   attention: {
     insights: unknown[];

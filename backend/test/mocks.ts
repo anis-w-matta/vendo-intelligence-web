@@ -103,6 +103,14 @@ export const itemsPerOrderHistogram = [
   { bucket: "1-5", order_count: 9 },
 ];
 
+export const ordersTrend = {
+  points: [
+    { bucket: "2026-07", order_count: 4, order_line_count: 10, item_quantity: "60" },
+    { bucket: "2026-08", order_count: 6, order_line_count: 15, item_quantity: "90" },
+  ],
+  orders_excluded_missing_commit_date: 1,
+};
+
 export function mockAllClients() {
   vi.doMock("../src/lib/backendClient.js", () => ({
     getAuthMe: vi.fn().mockResolvedValue(adminAuthMe),
@@ -123,5 +131,6 @@ export function mockAllClients() {
     getItemSummary: vi.fn().mockResolvedValue(itemDetailSummary),
     getCatalogDataHealth: vi.fn().mockResolvedValue(catalogDataHealth),
     getItemsPerOrderHistogram: vi.fn().mockResolvedValue(itemsPerOrderHistogram),
+    getOrdersTrend: vi.fn().mockResolvedValue(ordersTrend),
   }));
 }

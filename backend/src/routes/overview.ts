@@ -21,12 +21,13 @@ export default async function overviewRoutes(app: FastifyInstance) {
     const filtersRecord = { ...f };
 
     try {
-      const [orders, requests, customers, roster, salesmenOrders] = await Promise.all([
+      const [orders, requests, customers, roster, salesmenOrders, ordersTrend] = await Promise.all([
         catalogClient.getOrdersSummary(toOrdersParams(f)),
         backendClient.getRequestsSummary(authorization, toRequestsParams(f)),
         catalogClient.getCustomersSummary(),
         backendClient.listSalesmen(authorization),
         catalogClient.getSalesmenOrderMetrics(toOrdersParams(f)),
+        catalogClient.getOrdersTrend(toOrdersParams(f)),
       ]);
 
       const ordersCompleteness: CompletenessStatus =
@@ -109,6 +110,14 @@ export default async function overviewRoutes(app: FastifyInstance) {
           source: "backend pending_request", filters: filtersRecord, period,
           completeness: "COMPLETE",
         }),
+        order_trend: envelope(ordersTrend.points, {
+          source: "catalog-service order_header/order_details", filters: filtersRecord, period,
+          formula: "COUNT(DISTINCT (order_nb, order_type)) / COUNT(order_details.*) / SUM(order_details.qty), grouped by commit month",
+          completeness: ordersTrend.orders_excluded_missing_commit_date > 0 ? "PARTIAL" : "COMPLETE",
+          completeness_note: ordersTrend.orders_excluded_missing_commit_date > 0
+            ? `${ordersTrend.orders_excluded_missing_commit_date} order(s) excluded - no commit date recorded (pre-Phase-2 legacy orders)`
+            : undefined,
+        }),
         customers: envelope(
           { assigned: customers.assigned, unassigned: customers.unassigned, total: customers.total },
           {
@@ -120,7 +129,7 @@ export default async function overviewRoutes(app: FastifyInstance) {
         attention: {
           insights: [] as unknown[],
           status: "UNAVAILABLE" as CompletenessStatus,
-          note: "Evidence-backed anomaly detection (backlog spikes, rejection increases, etc.) ships with the Phase 8 insights engine - see /api/admin/intelligence/insights.",
+          note: "Attention Center signals (backlog increases, rejection-rate increases, turnaround deterioration, customer anomalies, item-demand spikes) require evidence-backed anomaly detection with real baselines and minimum sample sizes. That engine ships in a later phase - see /api/admin/intelligence/insights. Nothing is fabricated here in the meantime: an empty list, not invented findings.",
         },
       });
     } catch (err) {
