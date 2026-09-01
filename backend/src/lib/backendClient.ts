@@ -118,6 +118,63 @@ export function getAiQualitySummary(
   );
 }
 
+// Phase 11: hotspots + trend. No correction TAXONOMY or "prediction ->
+// edit -> final value" view - PendingLine has no stored original AI
+// prediction distinct from its final value anywhere in this schema. The
+// frontend must render this as an explicit gap (see
+// app/services/analytics.py's module docstring in the Python backend for
+// the full reasoning), never fabricate one.
+export interface ItemQualityStatOut {
+  item_nb: string;
+  sample_size: number;
+  correction_rate: number | null;
+}
+
+export function getAiQualityByItem(
+  authorization: string,
+  params: RequestsFilterParams & { min_sample_size?: number },
+): Promise<ItemQualityStatOut[]> {
+  return getJson<ItemQualityStatOut[]>(
+    { ...client, authorization },
+    "/admin/analytics/ai-quality-by-item",
+    params,
+  );
+}
+
+export interface IntentQualityStatOut {
+  intent: string;
+  sample_size: number;
+  correction_rate: number | null;
+}
+
+export function getAiQualityByIntent(
+  authorization: string,
+  params: Pick<RequestsFilterParams, "date_from" | "date_to" | "salesman_id" | "cust_nb">,
+): Promise<IntentQualityStatOut[]> {
+  return getJson<IntentQualityStatOut[]>(
+    { ...client, authorization },
+    "/admin/analytics/ai-quality-by-intent",
+    params,
+  );
+}
+
+export interface QualityTrendPointOut {
+  bucket: string;
+  sample_size: number;
+  correction_rate: number | null;
+}
+
+export function getAiQualityTrend(
+  authorization: string,
+  params: Pick<RequestsFilterParams, "date_from" | "date_to" | "salesman_id" | "cust_nb">,
+): Promise<QualityTrendPointOut[]> {
+  return getJson<QualityTrendPointOut[]>(
+    { ...client, authorization },
+    "/admin/analytics/ai-quality-trend",
+    params,
+  );
+}
+
 export interface SalesmanRequestMetricsOut {
   salesman_id: string;
   request_count: number;

@@ -114,10 +114,13 @@ export interface OrdersTrendOut {
   orders_excluded_missing_commit_date: number;
 }
 
-// Monthly order/line/quantity trend - fleet-wide (Phase 6) or scoped via
+// Order/line/quantity trend - fleet-wide (Phase 6) or scoped via
 // params.salesman_id (Phase 7, same point-in-time ownership attribution as
-// getSalesmenOrderMetrics).
-export function getOrdersTrend(params: OrdersFilterParams): Promise<OrdersTrendOut> {
+// getSalesmenOrderMetrics). granularity: "month" (default) or "day" -
+// Phase 12's anomaly baselines need daily resolution.
+export function getOrdersTrend(
+  params: OrdersFilterParams & { granularity?: "day" | "month" },
+): Promise<OrdersTrendOut> {
   return getJson<OrdersTrendOut>(client, "/analytics/orders-trend", params);
 }
 
@@ -207,6 +210,12 @@ export interface CatalogDataHealthOut {
   orders_with_resolvable_attribution: number;
   total_order_details: number;
   order_details_violating_qty_constraint: number;
+  order_details_orphaned: number;
+  order_details_invalid_item_ref: number;
+  orders_with_no_lines: number;
+  total_customers: number;
+  customers_with_salesman: number;
+  duplicate_order_groups: number;
 }
 
 export function getCatalogDataHealth(): Promise<CatalogDataHealthOut> {
