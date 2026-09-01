@@ -55,6 +55,54 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
                 status: "PARTIAL",
                 note: "Only requests committed after Phase 2 shipped keep committed_order_nb - earlier ones were deleted on commit and cannot be recovered.",
               },
+              order_details_orphaned: {
+                violations: catalogHealth.order_details_orphaned,
+                total: catalogHealth.total_order_details,
+                status: "COMPLETE",
+                note: "order_details has a real DB ForeignKeyConstraint to order_header - a line referencing a nonexistent order is structurally impossible, not just observed to be zero.",
+              },
+              order_details_invalid_item_ref: {
+                violations: catalogHealth.order_details_invalid_item_ref,
+                total: catalogHealth.total_order_details,
+                status: catalogHealth.order_details_invalid_item_ref === 0 ? "COMPLETE" : "PARTIAL",
+                note: "Unlike the order_header link, there is no DB foreign key from order_details to item - a line can reference an item_nb no longer (or never) present in the catalog, most likely a discontinued/renamed item from the legacy ERP import. This is a real query result, not a structural guarantee.",
+              },
+              orders_with_no_lines: {
+                count: catalogHealth.total_orders - catalogHealth.orders_with_no_lines,
+                total: catalogHealth.total_orders,
+                pct: pct(catalogHealth.total_orders - catalogHealth.orders_with_no_lines, catalogHealth.total_orders),
+                status: catalogHealth.orders_with_no_lines === 0 ? "COMPLETE" : "PARTIAL",
+                note: `${catalogHealth.orders_with_no_lines} order header(s) have zero order_details rows - a Header vs. Details reconciliation check, not necessarily an error (see the Reconciliation section below).`,
+              },
+              customers_with_salesman: {
+                count: catalogHealth.customers_with_salesman,
+                total: catalogHealth.total_customers,
+                pct: pct(catalogHealth.customers_with_salesman, catalogHealth.total_customers),
+                status: catalogHealth.customers_with_salesman === catalogHealth.total_customers ? "COMPLETE" : "PARTIAL",
+                note: "~40,000 legacy ERP customers were imported with no salesman assignment at all - see Known Legacy Limitations.",
+              },
+            },
+            duplicate_orders: {
+              groups: catalogHealth.duplicate_order_groups,
+              heuristic: "Orders sharing the same customer (cust_nb) and the same order_header.committed_at timestamp to the second.",
+              caveat:
+                "This is a deliberately narrow, conservative heuristic - not an exhaustive duplicate-order scan. It only flags orders sharing the exact same customer and a to-the-second commit timestamp: two genuinely independent commits landing at literally the same second is implausible, and same-key retried commits are already prevented elsewhere (commit_intent_id's unique constraint). As a result this number is expected to UNDER-count real duplicates - for example, two legacy ERP-imported rows for the same sale that landed a few seconds apart would not be caught - rather than risk mislabeling legitimate back-to-back orders as duplicates. Treat this as a lower bound / narrow signal to investigate, never as a complete count of duplicate orders.",
+            },
+            reconciliation: {
+              headers_details_quantity: {
+                total_order_headers: catalogHealth.total_orders,
+                order_headers_with_at_least_one_line: catalogHealth.total_orders - catalogHealth.orders_with_no_lines,
+                order_headers_with_no_lines: catalogHealth.orders_with_no_lines,
+                total_order_detail_rows: catalogHealth.total_order_details,
+                note: "Plain counts, not a computed match/mismatch verdict. An order header with zero order_details rows is unusual and worth investigating, but orders_with_no_lines above (not this section) is the honest signal for that - this section only lays the raw counts side by side.",
+              },
+              requests_vs_committed_orders: {
+                requests_with_committed_order_lineage: committedRequests,
+                total_requests: totalRequests,
+                orders_with_committed_at: catalogHealth.orders_with_committed_at,
+                total_orders: catalogHealth.total_orders,
+                note: 'These two counts come from independent systems via independent commit paths and are NOT expected to match - a gap between them is not, by itself, evidence of a problem. "Requests with committed order lineage" counts backend PendingRequest rows with status="committed"; "orders with a commit date" counts catalog-service order_header rows that have a committed_at timestamp. A live voice-order commit creates both a committed PendingRequest and an order_header row, but the legacy ERP import wrote order_header rows directly with no PendingRequest ever existing for them - so the order_header count is expected to exceed the committed-request count, often by a large margin. This is a side-by-side of two real counts from two systems, not a join of the underlying datasets - there is no cheap way to link an individual order back to the request that produced it from here.',
+              },
             },
             legacy_data_limitations: [
               "Orders committed before Phase 2 has no commit date (order_header.committed_at is NULL) and cannot be attributed to a historical salesman.",

@@ -63,4 +63,31 @@ export const METRIC_DICTIONARY: MetricDictionaryEntry[] = [
     limitations:
       "Scoped to requests whose PendingLine rows still exist - grows in completeness over time post-Phase-2, incomplete for anything committed before then.",
   },
+  {
+    metric: "Order Detail Item Reference Validity",
+    definition: "Order lines whose item_nb does not match any row in the item catalog.",
+    formula: "COUNT(order_details WHERE NOT EXISTS item.item_number = order_details.item_nb)",
+    source: "catalog-service order_details/item",
+    filters: [],
+    limitations:
+      "There is no DB foreign key from order_details to item (unlike order_details -> order_header, which is FK-enforced), so a bad reference is genuinely possible - most likely a discontinued/renamed item from the legacy ERP import. This is a real query result, checked, not assumed to be zero.",
+  },
+  {
+    metric: "Customer-Salesman Assignment Completeness",
+    definition: "Customers with a current salesman assigned (customer.salesman_id IS NOT NULL).",
+    formula: "COUNT(customer.salesman_id IS NOT NULL) / COUNT(customer.*)",
+    source: "catalog-service customer",
+    filters: [],
+    limitations:
+      "~40,000 legacy ERP customers were imported with no salesman assignment at all - no source of truth existed for who sells to whom, so this will never reach 100% without a manual assignment effort.",
+  },
+  {
+    metric: "Duplicate Order Groups (heuristic)",
+    definition: "Groups of 2+ orders sharing the same customer and the same commit timestamp to the second.",
+    formula: "COUNT(GROUP BY order_header.cust_nb, order_header.committed_at HAVING COUNT(*) > 1)",
+    source: "catalog-service order_header",
+    filters: [],
+    limitations:
+      "Deliberately narrow and conservative - likely UNDER-counts real duplicates (e.g. two legacy ERP-imported rows for the same sale landing a few seconds apart would not be caught) rather than risk flagging legitimate back-to-back orders as duplicates. A lower-bound signal to investigate, not an exhaustive duplicate count.",
+  },
 ];
