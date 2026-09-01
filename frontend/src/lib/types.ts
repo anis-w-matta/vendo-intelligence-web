@@ -382,10 +382,49 @@ export interface MetricDictionaryEntry {
   limitations: string;
 }
 
+// Phase 16: duplicate_order_groups from catalog-service's data_health() -
+// a deliberately narrow, conservative heuristic (see the caveat string
+// rendered from this on DataHealthPage). Render `caveat` in full - it is
+// the "never hide limitations" content for this metric, not a footnote.
+export interface DuplicateOrdersData {
+  groups: number;
+  heuristic: string;
+  caveat: string;
+}
+
+// Phase 16 reconciliation: plain counts laid side by side, never a
+// fabricated match/mismatch verdict beyond what the completeness block
+// itself already states honestly.
+export interface ReconciliationHeadersDetails {
+  total_order_headers: number;
+  order_headers_with_at_least_one_line: number;
+  order_headers_with_no_lines: number;
+  total_order_detail_rows: number;
+  note: string;
+}
+
+// Two independent systems/commit paths (live commit vs. legacy ERP
+// import) - not expected to match. See `note` for why a gap here is not
+// a problem by itself.
+export interface ReconciliationRequestsVsOrders {
+  requests_with_committed_order_lineage: number;
+  total_requests: number;
+  orders_with_committed_at: number;
+  total_orders: number;
+  note: string;
+}
+
+export interface ReconciliationData {
+  headers_details_quantity: ReconciliationHeadersDetails;
+  requests_vs_committed_orders: ReconciliationRequestsVsOrders;
+}
+
 export interface DataHealthData {
   completeness: Record<string, DataHealthField>;
   legacy_data_limitations: string[];
   metric_dictionary: MetricDictionaryEntry[];
+  duplicate_orders: DuplicateOrdersData;
+  reconciliation: ReconciliationData;
 }
 
 export interface OrderTrendPoint {
