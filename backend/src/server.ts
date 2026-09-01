@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import Fastify from "fastify";
 import { config } from "./config.js";
 import overviewRoutes from "./routes/overview.js";
@@ -43,6 +44,8 @@ async function main() {
 
 // Only auto-start when run directly (node dist/server.js / tsx src/server.ts)
 // - tests import buildApp() and drive it via app.inject() instead.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL (not a raw `file://` template) so this matches on Windows,
+// where process.argv[1] is a backslash path, not a URL.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }
