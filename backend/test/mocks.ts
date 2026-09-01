@@ -43,6 +43,23 @@ export const aiQualitySummary = {
   ],
 };
 
+// Phase 11: hotspots + trend mocks for the three new backendClient calls
+// aiQuality.ts wires in alongside getAiQualitySummary.
+export const aiQualityByItem = [
+  { item_nb: "I1", sample_size: 5, correction_rate: 0.4 },
+  { item_nb: "I2", sample_size: 3, correction_rate: 0.0 },
+];
+
+export const aiQualityByIntent = [
+  { intent: "place_order", sample_size: 8, correction_rate: 0.25 },
+  { intent: "return_order", sample_size: 2, correction_rate: 0.5 },
+];
+
+export const aiQualityTrend = [
+  { bucket: "2026-07", sample_size: 4, correction_rate: 0.5 },
+  { bucket: "2026-08", sample_size: 6, correction_rate: 0.1 },
+];
+
 export const salesmenRequestMetrics = [
   { salesman_id: "sm_a", request_count: 4, rejection_rate: 0.25, median_turnaround_seconds: 3600, ai_correction_rate: 0.1 },
   { salesman_id: "sm_b", request_count: 3, rejection_rate: 0.0, median_turnaround_seconds: 1800, ai_correction_rate: 0.0 },
@@ -137,6 +154,9 @@ export function mockAllClients() {
     listSalesmen: vi.fn().mockResolvedValue(roster),
     getRequestsSummary: vi.fn().mockResolvedValue(requestsSummary),
     getAiQualitySummary: vi.fn().mockResolvedValue(aiQualitySummary),
+    getAiQualityByItem: vi.fn().mockResolvedValue(aiQualityByItem),
+    getAiQualityByIntent: vi.fn().mockResolvedValue(aiQualityByIntent),
+    getAiQualityTrend: vi.fn().mockResolvedValue(aiQualityTrend),
     getSalesmenRequestMetrics: vi.fn().mockResolvedValue(salesmenRequestMetrics),
     getActivitySummary: vi.fn().mockResolvedValue(activitySummary),
   }));

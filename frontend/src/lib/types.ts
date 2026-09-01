@@ -330,12 +330,52 @@ export interface AiQualityBucket {
   correction_rate: number | null;
 }
 
+// Phase 11: correction-rate hotspots by item / by intent, and a monthly
+// trend - mirrors backend/src/lib/backendClient.ts's ItemQualityStatOut /
+// IntentQualityStatOut / QualityTrendPointOut verbatim. sample_size always
+// travels with correction_rate so a reviewer can judge reliability -
+// by_item is already gated server-side to a minimum sample size so one
+// edited line on a rarely-ordered item can't look like a 100% hotspot.
+export interface AiQualityItemStat {
+  item_nb: string;
+  sample_size: number;
+  correction_rate: number | null;
+}
+
+export interface AiQualityIntentStat {
+  intent: string;
+  sample_size: number;
+  correction_rate: number | null;
+}
+
+export interface AiQualityTrendPoint {
+  bucket: string;
+  sample_size: number;
+  correction_rate: number | null;
+}
+
+// Phase 11 data-honesty gap, rendered verbatim (never inferred): PendingLine
+// stores only the final (possibly human-edited) value - there is no stored
+// original AI prediction anywhere in the schema, so "AI prediction -> human
+// edit -> final value" and a correction taxonomy (item mismatch / quantity /
+// UOM / intent / other) are not reconstructable from current data. See
+// backend/src/routes/aiQuality.ts and app/services/analytics.py's module
+// docstring in the Python backend for the full reasoning.
+export interface CorrectionTaxonomyGap {
+  status: "UNAVAILABLE";
+  note: string;
+}
+
 export interface AiQualityData {
   reviewed_lines: number;
   edited_lines: number;
   overall_correction_rate: number | null;
   low_confidence_count: number;
   by_confidence_bucket: AiQualityBucket[];
+  by_item: AiQualityItemStat[];
+  by_intent: AiQualityIntentStat[];
+  trend: AiQualityTrendPoint[];
+  correction_taxonomy: CorrectionTaxonomyGap;
 }
 
 export interface HistogramBucket {
