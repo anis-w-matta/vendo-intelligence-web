@@ -136,3 +136,39 @@ export function getSalesmenRequestMetrics(
     params,
   );
 }
+
+// Phase 10: aggregate-only ActivityLog analytics, admin-gated - a NEW
+// endpoint, deliberately separate from the existing raw GET /activity
+// (no per-user auth at all, see docs/audit/04_auth_map.md). Never returns
+// raw log rows.
+export interface HourCountOut {
+  hour: number;
+  count: number;
+}
+
+export interface EventTypeCountOut {
+  event_type: string;
+  count: number;
+}
+
+export interface ActivityVolumePointOut {
+  day: string;
+  count: number;
+}
+
+export interface ActivitySummaryOut {
+  by_hour: HourCountOut[];
+  by_event_type: EventTypeCountOut[];
+  volume_over_time: ActivityVolumePointOut[];
+}
+
+export function getActivitySummary(
+  authorization: string,
+  params: Pick<RequestsFilterParams, "date_from" | "date_to" | "cust_nb">,
+): Promise<ActivitySummaryOut> {
+  return getJson<ActivitySummaryOut>(
+    { ...client, authorization },
+    "/admin/analytics/activity-summary",
+    params,
+  );
+}

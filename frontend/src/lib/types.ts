@@ -230,6 +230,7 @@ export interface TopItemRow {
   category: string | null;
   item_quantity: string;
   order_count: number;
+  customer_count: number;
 }
 
 export interface ItemsPageData {
@@ -243,6 +244,7 @@ export interface ItemDetailData {
   category: string | null;
   item_quantity: string;
   order_count: number;
+  customer_count: number;
   avg_qty_per_occurrence: string;
 }
 
@@ -250,6 +252,7 @@ export interface CategoryRow {
   category: string;
   item_quantity: string;
   order_count: number;
+  customer_count: number;
   share_of_total_quantity: string;
 }
 

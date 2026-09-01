@@ -71,7 +71,8 @@ export interface RankedCustomerOut {
 export function getTopCustomers(
   orderBy: "order_count" | "item_quantity",
   limit: number,
-  params: Pick<OrdersFilterParams, "date_from" | "date_to" | "salesman_id">,
+  // item_nb (Phase 9 Item x Customer matrix): "which customers buy this item".
+  params: Pick<OrdersFilterParams, "date_from" | "date_to" | "salesman_id" | "item_nb">,
 ): Promise<RankedCustomerOut[]> {
   return getJson<RankedCustomerOut[]>(client, "/analytics/top-customers", {
     order_by: orderBy,
@@ -86,6 +87,7 @@ export interface RankedItemOut {
   category: string;
   item_quantity: string;
   order_count: number;
+  customer_count: number;
 }
 
 export function getTopItems(
@@ -140,6 +142,7 @@ export interface CategorySummaryOut {
   category: string;
   item_quantity: string;
   order_count: number;
+  customer_count: number;
   share_of_total_quantity: string | null;
 }
 
@@ -190,6 +193,7 @@ export interface ItemDetailSummaryOut {
   category: string;
   item_quantity: string;
   order_count: number;
+  customer_count: number;
   avg_qty_per_occurrence: string | null;
 }
 
