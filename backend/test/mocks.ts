@@ -131,7 +131,36 @@ export const customerOrderHistory = [
   { order_nb: "O3", order_type: "standard", committed_at: "2026-08-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
 ];
 
-export function mockAllClients() {
+// Phase 12: a real daily-granularity order-volume spike, used only by the
+// route test that proves the Attention Center's fleet baseline arithmetic
+// actually wires up end to end (mockAllClients()'s default `ordersTrend`
+// above is a 2-point *monthly* series - deliberately too sparse/wrong-
+// grained to ever produce a day-granularity signal, which is what makes
+// the "stays honest when quiet" test meaningful). 20 prior days averaging
+// 8.2 (16 days at 8, 4 at 9 - same construction as frontend/src/lib/
+// anomalyBaseline.test.ts's "matches the phase spec's own example"
+// case), then a current day at 12 - the literal example the phase spec
+// itself gives ("Current orders 12; baseline (30-day avg) 8.2; +46.3%").
+function dayBefore(base: string, daysAgo: number): string {
+  const d = new Date(`${base}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - daysAgo);
+  return d.toISOString().slice(0, 10);
+}
+const dailyBaselineValues = [...Array(16).fill(8), ...Array(4).fill(9)]; // sum 164 / 20 = 8.2
+export const ordersTrendDaily = {
+  points: [
+    ...dailyBaselineValues.map((order_count, idx) => ({
+      bucket: dayBefore("2026-09-01", dailyBaselineValues.length - idx),
+      order_count,
+      order_line_count: order_count * 2,
+      item_quantity: String(order_count * 10),
+    })),
+    { bucket: "2026-09-01", order_count: 12, order_line_count: 24, item_quantity: "120" },
+  ],
+  orders_excluded_missing_commit_date: 0,
+};
+
+export function mockAllClients(options: { dailyOrdersTrend?: typeof ordersTrend } = {}) {
   vi.doMock("../src/lib/backendClient.js", () => ({
     getAuthMe: vi.fn().mockResolvedValue(adminAuthMe),
     listSalesmen: vi.fn().mockResolvedValue(roster),
@@ -153,6 +182,15 @@ export function mockAllClients() {
     getCatalogDataHealth: vi.fn().mockResolvedValue(catalogDataHealth),
     getItemsPerOrderHistogram: vi.fn().mockResolvedValue(itemsPerOrderHistogram),
     getCustomerOrderHistory: vi.fn().mockResolvedValue(customerOrderHistory),
-    getOrdersTrend: vi.fn().mockResolvedValue(ordersTrend),
+    // Default (no override): same flat monthly series regardless of
+    // granularity - preserves every pre-Phase-12 test's expectations
+    // exactly. Phase 12's own route test passes `dailyOrdersTrend` to get
+    // a real day-granularity series back only when granularity: "day" is
+    // requested.
+    getOrdersTrend: vi.fn().mockImplementation((params: { granularity?: string } = {}) =>
+      Promise.resolve(
+        params.granularity === "day" && options.dailyOrdersTrend ? options.dailyOrdersTrend : ordersTrend,
+      ),
+    ),
   }));
 }

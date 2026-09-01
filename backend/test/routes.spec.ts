@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { mockAllClients } from "./mocks.js";
+import { mockAllClients, ordersTrendDaily } from "./mocks.js";
 
 // vi.doMock (not the hoisted vi.mock) so we can set up the mocks before
 // dynamically importing anything that transitively pulls in
@@ -81,14 +81,43 @@ describe("all 13+ intelligence routes", () => {
     expect(body.order_trend.meta.completeness_note).toMatch(/excluded/);
   });
 
-  it("overview's Attention Center stub names the future signal types without fabricating any", async () => {
+  it("overview's Attention Center runs the real Phase 12 engine and stays honest when the canned mock data is quiet", async () => {
+    // The shared mock data (mocks.ts) has no real day-granularity spike, no
+    // previous-period rejection rate, and a customer history too short/too
+    // recent for a long-gap signal - so the real engine legitimately finds
+    // nothing to flag. That's "PARTIAL" (5 of 7 required categories
+    // computed for real; turnaround and per-item quantity trend are
+    // documented, deliberate exclusions) with an empty list, never a
+    // fabricated signal to have content.
     const res = await app.inject({ method: "GET", url: "/api/admin/intelligence/overview", headers: AUTH });
     const body = res.json();
     expect(body.attention.insights).toEqual([]);
-    expect(body.attention.status).toBe("UNAVAILABLE");
-    expect(body.attention.note).toMatch(/backlog/i);
+    expect(body.attention.status).toBe("PARTIAL");
     expect(body.attention.note).toMatch(/rejection/i);
     expect(body.attention.note).toMatch(/turnaround/i);
+    expect(body.attention.note).toMatch(/quiet system/i);
+  });
+
+  it("overview's Attention Center surfaces a real order-volume signal with full evidence when the daily trend actually spikes", async () => {
+    vi.resetModules();
+    mockAllClients({ dailyOrdersTrend: ordersTrendDaily });
+    const { buildApp: buildAppSpiking } = await import("../src/server.js");
+    const appSpiking = buildAppSpiking();
+    await appSpiking.ready();
+
+    const res = await appSpiking.inject({ method: "GET", url: "/api/admin/intelligence/overview", headers: AUTH });
+    const body = res.json();
+    const orderVolumeInsight = body.attention.insights.find(
+      (i: { category: string; source: string }) => i.category === "order_volume",
+    );
+    expect(orderVolumeInsight).toBeTruthy();
+    expect(orderVolumeInsight.reason).toMatch(/^Investigate: current fleet daily order count/);
+    expect(orderVolumeInsight.current_value).toBeGreaterThan(orderVolumeInsight.baseline_value);
+    expect(orderVolumeInsight.difference_pct).toBeGreaterThan(30);
+    expect(orderVolumeInsight.sample_size).toBeGreaterThanOrEqual(5);
+    expect(orderVolumeInsight.current_period.from).toBeTruthy();
+    expect(orderVolumeInsight.baseline_period.from).toBeTruthy();
+    expect(body.attention.status).toBe("PARTIAL");
   });
 
   it("insights is an honest stub, not fabricated data", async () => {

@@ -395,6 +395,37 @@ export interface OrderTrendPoint {
   item_quantity: string;
 }
 
+// Phase 12 (Anomaly Detection Engine): one evidence-backed observation for
+// the Command Center's Attention Center. Mirrors backend/src/routes/
+// overview.ts's AttentionInsight exactly - the phase's own explicit rule
+// ("Administrators must be able to understand why an anomaly was
+// generated. Do not build an opaque black box.") means every field below
+// is always populated for every insight, never a bare label. `reason` is
+// always an "Investigate: ..." observation, never a verdict, and its
+// numbers are always reconstructable from the other fields on the same
+// object (see frontend/src/lib/anomalyBaseline.ts's own anti-drift test).
+export type AttentionCategory =
+  | "order_volume"
+  | "quantity"
+  | "request"
+  | "rejection"
+  | "customer_ordering_gap";
+
+export interface AttentionInsight {
+  id: string;
+  category: AttentionCategory;
+  reason: string;
+  current_value: number;
+  baseline_value: number;
+  difference_abs: number;
+  difference_pct: number;
+  current_period: Period;
+  baseline_period: Period;
+  sample_size: number;
+  source: string;
+  subject?: { cust_nb: string; customer_name: string };
+}
+
 export interface OverviewData {
   kpis: Record<string, Metric<unknown>>;
   sales_by_salesman: Envelope<{ salesman_id: string; salesman_name: string | null; order_count: number; item_quantity: string }[]>;
@@ -402,7 +433,7 @@ export interface OverviewData {
   order_trend: Envelope<OrderTrendPoint[]>;
   customers: Envelope<CustomersSummary>;
   attention: {
-    insights: unknown[];
+    insights: AttentionInsight[];
     status: CompletenessStatus;
     note: string;
   };
