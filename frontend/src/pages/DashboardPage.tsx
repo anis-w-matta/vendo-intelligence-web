@@ -10,7 +10,7 @@ import { ChartContainer } from "../components/charts/ChartContainer";
 import { RankingChart } from "../components/charts/RankingChart";
 import { TrendLineChart } from "../components/charts/TrendLineChart";
 import { HistogramChart } from "../components/charts/HistogramChart";
-import { UnavailableBlock } from "../components/states/States";
+import { EmptyState } from "../components/states/States";
 import { formatNumber, formatDate, formatSeconds } from "../lib/format";
 
 // Fleet-wide "top N" ranking - the analytics endpoints return a longer list
@@ -198,7 +198,35 @@ export function DashboardPage() {
 
               <div className="card">
                 <div className="section-title">Attention Center</div>
-                <UnavailableBlock title="No signals yet" note={overview.attention.note} />
+                {/* Phase 12 (Anomaly Detection Engine): every insight below is
+                    an evidence-backed observation, never a verdict - each
+                    `reason` string is reconstructed entirely from the current
+                    value, baseline, and sample size shown with it, per the
+                    phase's own "no opaque black box" rule. An empty list here
+                    means the engine ran and genuinely found nothing to flag -
+                    it is never padded with a weak signal just to have
+                    content (see overview.attention.note for exactly which
+                    categories are covered and which two are not). */}
+                {overview.attention.insights.length === 0 ? (
+                  <EmptyState title="No signals in the current data" body={overview.attention.note} />
+                ) : (
+                  <>
+                    <ul className="stack" style={{ margin: 0, paddingLeft: 0, listStyle: "none", gap: 10 }}>
+                      {overview.attention.insights.map((insight) => (
+                        <li key={insight.id} style={{ fontSize: 12.5, borderBottom: "1px solid var(--border, #e5e5e5)", paddingBottom: 8 }}>
+                          <div>{insight.reason}</div>
+                          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+                            Sample size: {formatNumber(insight.sample_size)} · Current period: {insight.current_period.from === insight.current_period.to
+                              ? insight.current_period.from
+                              : `${insight.current_period.from} – ${insight.current_period.to}`}
+                            {" "}· Baseline period: {insight.baseline_period.from} – {insight.baseline_period.to}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="muted" style={{ fontSize: 11, marginTop: 10 }}>{overview.attention.note}</div>
+                  </>
+                )}
               </div>
             </div>
           </>
