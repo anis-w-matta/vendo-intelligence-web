@@ -103,6 +103,15 @@ export const itemsPerOrderHistogram = [
   { bucket: "1-5", order_count: 9 },
 ];
 
+// Phase 7 salesman-detail trend chart (orders/quantity over time).
+export const ordersTrend = {
+  points: [
+    { bucket: "2026-01", order_count: 3, order_line_count: 8, item_quantity: "45" },
+    { bucket: "2026-02", order_count: 3, order_line_count: 7, item_quantity: "45" },
+  ],
+  orders_excluded_missing_commit_date: 1,
+};
+
 export function mockAllClients() {
   vi.doMock("../src/lib/backendClient.js", () => ({
     getAuthMe: vi.fn().mockResolvedValue(adminAuthMe),
@@ -123,5 +132,6 @@ export function mockAllClients() {
     getItemSummary: vi.fn().mockResolvedValue(itemDetailSummary),
     getCatalogDataHealth: vi.fn().mockResolvedValue(catalogDataHealth),
     getItemsPerOrderHistogram: vi.fn().mockResolvedValue(itemsPerOrderHistogram),
+    getOrdersTrend: vi.fn().mockResolvedValue(ordersTrend),
   }));
 }

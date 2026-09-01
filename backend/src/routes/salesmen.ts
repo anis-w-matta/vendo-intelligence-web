@@ -37,6 +37,7 @@ export default async function salesmenRoutes(app: FastifyInstance) {
           const r = requestByLoginId.get(s.login_id);
           const orderCount = o?.order_count ?? 0;
           const customerCount = o?.customer_count ?? 0;
+          const itemQuantityNum = Number(o?.item_quantity ?? "0");
           return {
             salesman_id: s.login_id,
             salesman_name: s.name,
@@ -46,6 +47,11 @@ export default async function salesmenRoutes(app: FastifyInstance) {
             item_quantity: o?.item_quantity ?? "0",
             customer_count: customerCount,
             orders_per_customer: customerCount ? orderCount / customerCount : null,
+            // Phase 7: items/customer, items/order - pure arithmetic on data
+            // already fetched above, same divide-by-zero-guard pattern as
+            // orders_per_customer.
+            items_per_customer: customerCount ? itemQuantityNum / customerCount : null,
+            items_per_order: orderCount ? itemQuantityNum / orderCount : null,
             rejection_rate: r?.rejection_rate ?? null,
             median_turnaround_seconds: r?.median_turnaround_seconds ?? null,
             ai_correction_rate: r?.ai_correction_rate ?? null,
