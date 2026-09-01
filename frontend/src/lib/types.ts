@@ -238,6 +238,14 @@ export interface ItemsPageData {
   top_items_by_order_frequency: TopItemRow[];
 }
 
+// Phase 9: this item's own monthly order/quantity trend - same shape as
+// CustomerOrderTrend, kept as its own named type since it's a distinct
+// field on a distinct page.
+export interface ItemOrderTrend {
+  points: OrderTrendPoint[];
+  orders_excluded_missing_commit_date: number;
+}
+
 export interface ItemDetailData {
   item_nb: string;
   item_desc: string;
@@ -246,6 +254,11 @@ export interface ItemDetailData {
   order_count: number;
   customer_count: number;
   avg_qty_per_occurrence: string;
+  // Phase 9 "Item x Customer matrix" - the bounded, per-item
+  // interpretation: top customers who buy this item (see
+  // backend/src/routes/items.ts), not a full item x customer grid.
+  top_customers: TopCustomerRow[];
+  order_trend: ItemOrderTrend;
 }
 
 export interface CategoryRow {
@@ -254,6 +267,10 @@ export interface CategoryRow {
   order_count: number;
   customer_count: number;
   share_of_total_quantity: string;
+  // Phase 9: present only for the top 1-2 categories by item_quantity
+  // (see backend/src/routes/categories.ts) - undefined for every other
+  // row, never a fabricated empty trend.
+  trend?: ItemOrderTrend;
 }
 
 export interface TurnaroundStats {
