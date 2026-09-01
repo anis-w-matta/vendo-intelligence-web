@@ -113,6 +113,14 @@ export const ordersTrend = {
   orders_excluded_missing_commit_date: 1,
 };
 
+// Phase 8: one customer's committed order history (oldest first) - the raw
+// material customerDetail.ts's activity-state classification runs on.
+export const customerOrderHistory = [
+  { order_nb: "O1", order_type: "standard", committed_at: "2026-06-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
+  { order_nb: "O2", order_type: "standard", committed_at: "2026-07-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
+  { order_nb: "O3", order_type: "standard", committed_at: "2026-08-01T00:00:00Z", item_quantity: "5", order_line_count: 2 },
+];
+
 export function mockAllClients() {
   vi.doMock("../src/lib/backendClient.js", () => ({
     getAuthMe: vi.fn().mockResolvedValue(adminAuthMe),
@@ -133,6 +141,7 @@ export function mockAllClients() {
     getItemSummary: vi.fn().mockResolvedValue(itemDetailSummary),
     getCatalogDataHealth: vi.fn().mockResolvedValue(catalogDataHealth),
     getItemsPerOrderHistogram: vi.fn().mockResolvedValue(itemsPerOrderHistogram),
+    getCustomerOrderHistory: vi.fn().mockResolvedValue(customerOrderHistory),
     getOrdersTrend: vi.fn().mockResolvedValue(ordersTrend),
   }));
 }
