@@ -1,0 +1,24 @@
+{
+  "name": "vendo-intelligence-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VeNdO Intelligence Node.js analytics BFF - see vendo-intelligence-web/docs/audit and the Phase 3 plan. Read-only; never connects to Postgres directly; calls the existing backend/catalog-service FastAPI services.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "fastify": "^5.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}
