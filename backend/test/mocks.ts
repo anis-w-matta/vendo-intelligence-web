@@ -123,6 +123,9 @@ export const itemDetailSummary = {
 export const catalogDataHealth = {
   total_orders: 10, orders_with_committed_at: 9, orders_with_resolvable_attribution: 8,
   total_order_details: 25, order_details_violating_qty_constraint: 0,
+  order_details_orphaned: 0, order_details_invalid_item_ref: 1,
+  orders_with_no_lines: 0, total_customers: 100, customers_with_salesman: 60,
+  duplicate_order_groups: 0,
 };
 
 export const itemsPerOrderHistogram = [
