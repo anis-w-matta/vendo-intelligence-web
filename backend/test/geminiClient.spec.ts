@@ -136,6 +136,27 @@ describe("geminiClient", () => {
     expect(result.status).toBe("unavailable");
   });
 
+  it("produces an unavailable result without throwing on a 429 rate-limit response", async () => {
+    // Phase 17 certification gap: the generic non-200 test above used 503;
+    // Gemini's actual rate-limit status is 429 specifically, and the phase
+    // acceptance checklist calls it out by name - verify it goes through
+    // the same "unavailable", not a crash, without special-casing 429.
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: async () => ({ error: { code: 429, message: "Resource has been exhausted", status: "RESOURCE_EXHAUSTED" } }),
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+    const { explainInsight } = await loadGeminiClient("test-key");
+
+    const result = await explainInsight(SAMPLE_FACTS);
+
+    expect(result.status).toBe("unavailable");
+    if (result.status === "unavailable") {
+      expect(result.reason).toBeTruthy();
+    }
+  });
+
   it("produces an unavailable result without throwing on a network error", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("ECONNREFUSED"));
     vi.stubGlobal("fetch", fetchMock);
