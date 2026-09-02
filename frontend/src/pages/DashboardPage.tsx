@@ -13,6 +13,54 @@ import { HistogramChart } from "../components/charts/HistogramChart";
 import { EmptyState } from "../components/states/States";
 import { formatNumber, formatDate, formatSeconds } from "../lib/format";
 
+// Phase 14 (Gemini Intelligence Layer): a short, server-cached (see
+// backend/src/lib/geminiClient.ts's BRIEFING_TTL_MS - at most once per
+// calendar day per insight-set) manager briefing synthesized from the
+// CURRENT real Insight list - never fabricated, never a source of new
+// facts. Fetched once when the Command Center mounts (not re-fetched per
+// filter change, since the briefing is deliberately fleet-wide) - this
+// never costs an extra real Gemini call beyond what the server-side cache
+// already allows once per day. A Gemini outage renders an honest
+// "unavailable" message; it never blocks or breaks the rest of the page.
+function ManagerBriefingCard() {
+  const state = useApiQuery(() => api.briefing(), []);
+
+  return (
+    <div className="card">
+      <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span>Manager Briefing (AI)</span>
+        <Link to="/insights" className="muted" style={{ fontSize: 11.5, fontWeight: 400 }}>
+          Full Insight Engine &rarr;
+        </Link>
+      </div>
+      {state.status === "loading" && (
+        <div className="muted" style={{ fontSize: 11.5 }} role="status" aria-busy="true">
+          Loading briefing…
+        </div>
+      )}
+      {state.status === "error" && (
+        <div className="muted" style={{ fontSize: 11.5 }} role="status">
+          AI briefing unavailable right now.
+        </div>
+      )}
+      {state.status === "success" && state.data.status === "unavailable" && (
+        <div className="muted" style={{ fontSize: 11.5 }} role="status">
+          AI briefing unavailable right now.
+        </div>
+      )}
+      {state.status === "success" && state.data.status === "ok" && (
+        <>
+          <p style={{ fontSize: 12.5 }}>{state.data.briefing}</p>
+          <div className="muted" style={{ fontSize: 11 }}>
+            Based on {formatNumber(state.data.insight_count)} current insight(s) · generated {formatDate(state.data.generated_at)}
+            {state.data.cached ? " (today's cached briefing)" : ""}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Fleet-wide "top N" ranking - the analytics endpoints return a longer list
 // (or the caller's `limit` filter); the Command Center only ever shows a
 // short preview so it stays a summary, not a duplicate of the dedicated
@@ -233,6 +281,8 @@ export function DashboardPage() {
                   </>
                 )}
               </div>
+
+              <ManagerBriefingCard />
             </div>
           </>
         )}

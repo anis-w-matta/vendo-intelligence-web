@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { Insight, InsightCategory } from "../lib/types";
+import type { GeminiExplainResult, Insight, InsightCategory } from "../lib/types";
 import { api } from "../lib/api";
 import { useApiQuery } from "../hooks/useApiQuery";
 import { useFilters } from "../hooks/useFilters";
@@ -29,6 +30,66 @@ function formatChange(insight: Insight): string {
   return `${abs} (${pctSign}${insight.change_pct.toFixed(1)}%)`;
 }
 
+// Phase 14 (Gemini Intelligence Layer): "Explain this insight" - only
+// ever fires on this explicit button click, never automatically on page
+// load or on every render. Sends this ONE insight's own fields to the
+// BFF (see backend/src/routes/geminiExplain.ts), which forwards only
+// those same fields to Gemini - no other insight, no raw data. A Gemini
+// outage is rendered as an honest "unavailable" message, never a broken
+// card and never fabricated text standing in for a real explanation.
+type ExplainState = "idle" | "loading" | "loaded" | "error";
+
+function ExplainInsight({ insight }: { insight: Insight }) {
+  const [state, setState] = useState<ExplainState>("idle");
+  const [result, setResult] = useState<GeminiExplainResult | null>(null);
+
+  async function handleExplain() {
+    setState("loading");
+    try {
+      const res = await api.explainInsight(insight);
+      setResult(res);
+      setState("loaded");
+    } catch {
+      // A thrown ApiError (network/auth failure calling the BFF itself)
+      // is rendered exactly like a Gemini-reported "unavailable" - the
+      // user only ever needs to know the explanation isn't available
+      // right now, not why.
+      setResult(null);
+      setState("error");
+    }
+  }
+
+  if (state === "idle") {
+    return (
+      <button type="button" className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 12 }} onClick={handleExplain}>
+        Explain (AI)
+      </button>
+    );
+  }
+
+  if (state === "loading") {
+    return (
+      <div className="muted" style={{ fontSize: 11.5 }} role="status" aria-busy="true">
+        Asking Gemini for a plain-language explanation…
+      </div>
+    );
+  }
+
+  if (state === "error" || (result && result.status === "unavailable")) {
+    return (
+      <div className="muted" style={{ fontSize: 11.5 }} role="status">
+        AI explanation unavailable right now.
+      </div>
+    );
+  }
+
+  return (
+    <p style={{ fontSize: 12.5, fontStyle: "italic", margin: "6px 0 0" }}>
+      {result && result.status === "ok" ? result.explanation : ""}
+    </p>
+  );
+}
+
 function InsightRow({ insight }: { insight: Insight }) {
   return (
     <li className="card" style={{ padding: 14 }}>
@@ -55,6 +116,10 @@ function InsightRow({ insight }: { insight: Insight }) {
         <Link to={insight.drill_down} className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 12 }}>
           Investigate &rarr;
         </Link>
+      </div>
+
+      <div style={{ marginTop: 6 }}>
+        <ExplainInsight insight={insight} />
       </div>
     </li>
   );

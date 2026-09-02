@@ -554,6 +554,41 @@ export interface InsightsData {
   last_updated: string;
 }
 
+// Phase 14 (Gemini Intelligence Layer): the ONE Gemini-derived value this
+// app ever renders is a short supplementary explanation string layered on
+// top of an already-computed, already-verified Insight - Gemini never
+// computes or supplies a number itself. `status: "unavailable"` is an
+// honest, expected state (missing API key, network error, timeout, or a
+// malformed response - see backend/src/lib/geminiClient.ts), never
+// treated as a hard error by the page around it.
+export interface GeminiExplainOk {
+  status: "ok";
+  explanation: string;
+  cached: boolean;
+}
+export interface GeminiUnavailable {
+  status: "unavailable";
+  reason: string;
+}
+export type GeminiExplainResult = GeminiExplainOk | GeminiUnavailable;
+
+// The daily/periodic manager briefing (Command Center) - server-cached
+// (see geminiClient.ts's BRIEFING_TTL_MS), so `cached: true` here just
+// means "this is today's already-generated briefing," not a failure.
+export interface GeminiBriefingOk {
+  status: "ok";
+  briefing: string;
+  insight_count: number;
+  generated_at: string;
+  cached: boolean;
+}
+export interface GeminiBriefingUnavailable {
+  status: "unavailable";
+  reason: string;
+  insight_count: number;
+}
+export type GeminiBriefingResult = GeminiBriefingOk | GeminiBriefingUnavailable;
+
 export interface Filters {
   date_from?: string;
   date_to?: string;

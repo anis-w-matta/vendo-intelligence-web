@@ -16,20 +16,7 @@ export class ApiError extends Error {
 // handled per-page - every page treats "not authenticated" the same way.
 export class UnauthorizedError extends ApiError {}
 
-async function request<T>(path: string, params?: Filters): Promise<T> {
-  const session = loadSession();
-  if (!session) throw new UnauthorizedError(401, "Not signed in.");
-
-  const qs = params ? filtersToSearchParams(params).toString() : "";
-  const url = `${BFF_URL}${path}${qs ? `?${qs}` : ""}`;
-
-  let res: Response;
-  try {
-    res = await fetch(url, { headers: { Authorization: `Bearer ${session.token}` } });
-  } catch {
-    throw new ApiError(0, "Could not reach the Intelligence API. Is the BFF running?");
-  }
-
+async function handleResponse<T>(res: Response): Promise<T> {
   if (res.status === 401) {
     clearSession();
     throw new UnauthorizedError(401, "Your session expired. Please sign in again.");
@@ -48,6 +35,43 @@ async function request<T>(path: string, params?: Filters): Promise<T> {
     throw new ApiError(res.status, detail || `Request failed (${res.status}).`);
   }
   return (await res.json()) as T;
+}
+
+async function request<T>(path: string, params?: Filters): Promise<T> {
+  const session = loadSession();
+  if (!session) throw new UnauthorizedError(401, "Not signed in.");
+
+  const qs = params ? filtersToSearchParams(params).toString() : "";
+  const url = `${BFF_URL}${path}${qs ? `?${qs}` : ""}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { Authorization: `Bearer ${session.token}` } });
+  } catch {
+    throw new ApiError(0, "Could not reach the Intelligence API. Is the BFF running?");
+  }
+  return handleResponse<T>(res);
+}
+
+// Phase 14: the only POST call this app makes - "Explain this insight"
+// sends the one clicked Insight's own fields to the BFF (never triggered
+// automatically, see InsightsPage.tsx).
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const session = loadSession();
+  if (!session) throw new UnauthorizedError(401, "Not signed in.");
+
+  const url = `${BFF_URL}${path}`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, "Could not reach the Intelligence API. Is the BFF running?");
+  }
+  return handleResponse<T>(res);
 }
 
 export const api = {
@@ -72,4 +96,10 @@ export const api = {
   insights: (f: Filters) => request<import("./types").InsightsData>("/api/admin/intelligence/insights", f),
   orders: (f: Filters) => request<import("./types").Envelope<import("./types").OrdersPageData>>("/api/admin/intelligence/orders", f),
   requests: (f: Filters) => request<import("./types").Envelope<import("./types").RequestsPageData>>("/api/admin/intelligence/requests", f),
+  // Phase 14 (Gemini Intelligence Layer) - never called automatically;
+  // only on an explicit user action (an "Explain" click, or the Command
+  // Center loading its briefing card once).
+  explainInsight: (insight: import("./types").Insight) =>
+    postJson<import("./types").GeminiExplainResult>("/api/admin/intelligence/insights/explain", insight),
+  briefing: () => request<import("./types").GeminiBriefingResult>("/api/admin/intelligence/briefing"),
 };
