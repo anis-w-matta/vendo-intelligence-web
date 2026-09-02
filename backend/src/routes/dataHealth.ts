@@ -1,4 +1,6 @@
-// Phase 9 Data Health and Trust Center - "Never hide limitations."
+// Data Health and Trust Center - surfaces data-quality caveats in plain
+// language for a sales-manager audience; never hide limitations, but never
+// expose internal schema/implementation detail to explain them either.
 import type { FastifyInstance } from "fastify";
 import { requireAdmin } from "../plugins/auth.js";
 import { envelope } from "../lib/metricContract.js";
@@ -47,33 +49,33 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
                 violations: catalogHealth.order_details_violating_qty_constraint,
                 total: catalogHealth.total_order_details,
                 status: "COMPLETE",
-                note: "Enforced by a DB CHECK constraint since Phase 2 - structurally guaranteed zero, not just observed.",
+                note: "Guaranteed by the system - this can never happen.",
               },
               requests_with_committed_order_lineage: {
                 count: committedRequests,
                 total: totalRequests,
                 pct: pct(committedRequests, totalRequests),
                 status: "PARTIAL",
-                note: "Only requests committed after Phase 2 shipped keep committed_order_nb - earlier ones were deleted on commit and cannot be recovered.",
+                note: "Only available for requests processed after our request-tracking upgrade; earlier records were not retained.",
               },
               order_details_orphaned: {
                 violations: catalogHealth.order_details_orphaned,
                 total: catalogHealth.total_order_details,
                 status: "COMPLETE",
-                note: "order_details has a real DB ForeignKeyConstraint to order_header - a line referencing a nonexistent order is structurally impossible, not just observed to be zero.",
+                note: "Guaranteed by the system - every order line is always linked to a real order.",
               },
               order_details_invalid_item_ref: {
                 violations: catalogHealth.order_details_invalid_item_ref,
                 total: catalogHealth.total_order_details,
                 status: catalogHealth.order_details_invalid_item_ref === 0 ? "COMPLETE" : "PARTIAL",
-                note: "Unlike the order_header link, there is no DB foreign key from order_details to item - a line can reference an item_nb no longer (or never) present in the catalog, most likely a discontinued/renamed item from the legacy ERP import. This is a real query result, not a structural guarantee.",
+                note: "A small number of order lines can reference an item that's no longer in the catalog, usually a discontinued or renamed item from an older system that was migrated in.",
               },
               orders_with_no_lines: {
                 count: catalogHealth.total_orders - catalogHealth.orders_with_no_lines,
                 total: catalogHealth.total_orders,
                 pct: pct(catalogHealth.total_orders - catalogHealth.orders_with_no_lines, catalogHealth.total_orders),
                 status: catalogHealth.orders_with_no_lines === 0 ? "COMPLETE" : "PARTIAL",
-                note: `${catalogHealth.orders_with_no_lines} order header(s) have zero order_details rows - a Header vs. Details reconciliation check, not necessarily an error (see the Reconciliation section below).`,
+                note: `${catalogHealth.orders_with_no_lines} order(s) have no line items recorded - see the Reconciliation section below. This doesn't necessarily indicate an error.`,
               },
               customers_with_salesman: {
                 count: catalogHealth.customers_with_salesman,
@@ -81,15 +83,15 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
                 pct: pct(catalogHealth.customers_with_salesman, catalogHealth.total_customers),
                 status: catalogHealth.customers_with_salesman === catalogHealth.total_customers ? "COMPLETE" : "PARTIAL",
                 note: unassignedCustomers > 0
-                  ? `${unassignedCustomers.toLocaleString()} customer(s) have no salesman assignment - see Known Legacy Limitations.`
+                  ? `${unassignedCustomers.toLocaleString()} customer(s) don't have a salesman assigned yet - see Known Limitations below.`
                   : "Every customer currently has a salesman assigned.",
               },
             },
             duplicate_orders: {
               groups: catalogHealth.duplicate_order_groups,
-              heuristic: "Orders sharing the same customer (cust_nb) and the same order_header.committed_at timestamp to the second.",
+              heuristic: "Orders sharing the same customer and the same completion time to the second.",
               caveat:
-                "This is a deliberately narrow, conservative heuristic - not an exhaustive duplicate-order scan. It only flags orders sharing the exact same customer and a to-the-second commit timestamp: two genuinely independent commits landing at literally the same second is implausible, and same-key retried commits are already prevented elsewhere (commit_intent_id's unique constraint). As a result this number is expected to UNDER-count real duplicates - for example, two legacy ERP-imported rows for the same sale that landed a few seconds apart would not be caught - rather than risk mislabeling legitimate back-to-back orders as duplicates. Treat this as a lower bound / narrow signal to investigate, never as a complete count of duplicate orders.",
+                "A deliberately narrow, conservative check, not an exhaustive scan - it only flags orders sharing the exact same customer and the same completion time to the second. As a result this figure likely under-counts real duplicates rather than risk mislabeling legitimate back-to-back orders. Treat it as a starting point to investigate, not a complete count of duplicate orders.",
             },
             reconciliation: {
               headers_details_quantity: {
@@ -97,30 +99,31 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
                 order_headers_with_at_least_one_line: catalogHealth.total_orders - catalogHealth.orders_with_no_lines,
                 order_headers_with_no_lines: catalogHealth.orders_with_no_lines,
                 total_order_detail_rows: catalogHealth.total_order_details,
-                note: "Plain counts, not a computed match/mismatch verdict. An order header with zero order_details rows is unusual and worth investigating, but orders_with_no_lines above (not this section) is the honest signal for that - this section only lays the raw counts side by side.",
+                note: "An order with no line items is unusual and worth investigating, but isn't automatically treated as an error.",
               },
               requests_vs_committed_orders: {
                 requests_with_committed_order_lineage: committedRequests,
                 total_requests: totalRequests,
                 orders_with_committed_at: catalogHealth.orders_with_committed_at,
                 total_orders: catalogHealth.total_orders,
-                note: 'These two counts come from independent systems via independent commit paths and are NOT expected to match - a gap between them is not, by itself, evidence of a problem. "Requests with committed order lineage" counts backend PendingRequest rows with status="committed"; "orders with a commit date" counts catalog-service order_header rows that have a committed_at timestamp. A live voice-order commit creates both a committed PendingRequest and an order_header row, but the legacy ERP import wrote order_header rows directly with no PendingRequest ever existing for them - so the order_header count is expected to exceed the committed-request count, often by a large margin. This is a side-by-side of two real counts from two systems, not a join of the underlying datasets - there is no cheap way to link an individual order back to the request that produced it from here.',
+                note: "These two figures come from separate systems and aren't expected to match - a gap between them isn't, on its own, evidence of a problem. Orders imported from an older system were never routed through the request queue, so the order count is expected to exceed the request count, often by a large margin.",
               },
             },
             legacy_data_limitations: [
-              // These first two describe a fixed historical fact (rows that
-              // predate Phase 2, and can never retroactively gain a
-              // committed_at/PendingLine row) - permanently true regardless
-              // of what changes going forward, safe to state unconditionally.
-              "Orders committed before Phase 2 has no commit date (order_header.committed_at is NULL) and cannot be attributed to a historical salesman.",
-              "Requests committed before Phase 2 shipped have no surviving PendingRequest/PendingLine row - AI-quality and turnaround data for them is permanently gone.",
+              // These first two describe a fixed historical fact (rows from
+              // before our tracking upgrades, which can never retroactively
+              // gain the data that upgrade started recording) - permanently
+              // true regardless of what changes going forward, safe to
+              // state unconditionally.
+              "Orders placed before our order-tracking upgrade have no completion date on file and cannot be attributed to a historical salesman.",
+              "Requests processed before our request-tracking upgrade have no surviving detail record - AI-quality and turnaround data for them is permanently gone.",
               // Unlike the two above, customer-salesman assignment CAN
-              // change (PATCH /customers/{cust_nb}/salesman) - a hardcoded
-              // claim here would silently go stale and contradict the live
-              // customers_with_salesman completeness count above the moment
-              // any assignment happened. Only ever state what's true right now.
+              // change - a hardcoded claim here would silently go stale and
+              // contradict the live customers_with_salesman completeness
+              // count above the moment any assignment happened. Only ever
+              // state what's true right now.
               ...(unassignedCustomers > 0
-                ? [`${unassignedCustomers.toLocaleString()} of ${catalogHealth.total_customers.toLocaleString()} customers currently have no salesman assignment (customer.salesman_id NULL) - typically legacy ERP-imported customers with no source of truth for who sells to whom.`]
+                ? [`${unassignedCustomers.toLocaleString()} of ${catalogHealth.total_customers.toLocaleString()} customers currently have no salesman assignment - typically customers imported from an older system with no record of who sells to whom.`]
                 : []),
             ],
             metric_dictionary: METRIC_DICTIONARY,
@@ -128,7 +131,7 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
           {
             source: "catalog-service order_header/order_details/customer_ownership_history, backend pending_request",
             filters: {}, period: null, completeness: "PARTIAL",
-            completeness_note: "This page's own job is to report completeness - see the completeness block above rather than treating this envelope's own status as the final word.",
+            completeness_note: "See the completeness breakdown above for full detail.",
           },
         ),
       );

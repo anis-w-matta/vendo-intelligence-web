@@ -1,30 +1,9 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { api, ApiError } from "../lib/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { LoadingBlock, UnavailableBlock, EmptyState, ErrorBanner } from "../components/states/States";
 import type { AskResponse } from "../lib/types";
 
-const CODE_BLOCK_STYLE: CSSProperties = {
-  fontFamily: "monospace",
-  fontSize: 11,
-  background: "rgba(127,127,127,0.08)",
-  padding: 10,
-  borderRadius: 6,
-  overflowX: "auto",
-  marginTop: 6,
-  maxHeight: 320,
-};
-
-// Phase 15 (Ask VeNdO Intelligence): a free-text question -> Gemini
-// classification -> a validated, closed-world intent -> execution against
-// an already-verified data source -> a Gemini explanation of ONLY that
-// verified result (see backend/src/routes/ask.ts / backend/src/lib/
-// askEngine.ts). This page never computes anything itself - it renders
-// whatever status/intent/result/answer the BFF returns, verbatim, exactly
-// like every other page in this app renders server-computed facts.
-//
-// The example questions below are this phase's own worked examples -
-// offered as one-click prompts, not a hint that only these seven work.
 const EXAMPLE_QUESTIONS = [
   "Who created the most orders this month?",
   "Which salesman has the most item quantity?",
@@ -40,30 +19,6 @@ type AskState =
   | { status: "loading" }
   | { status: "error"; error: ApiError }
   | { status: "done"; response: AskResponse };
-
-function IntentSummary({ intent }: { intent: AskResponse["intent"] }) {
-  if (!intent) return null;
-  return (
-    <details style={{ marginTop: 12 }}>
-      <summary className="muted" style={{ fontSize: 11.5, cursor: "pointer" }}>
-        Classified query (for transparency)
-      </summary>
-      <pre style={CODE_BLOCK_STYLE}>{JSON.stringify(intent, null, 2)}</pre>
-    </details>
-  );
-}
-
-function ResultSummary({ result }: { result: unknown }) {
-  if (result === null || result === undefined) return null;
-  return (
-    <details style={{ marginTop: 6 }} open>
-      <summary className="muted" style={{ fontSize: 11.5, cursor: "pointer" }}>
-        Underlying verified data
-      </summary>
-      <pre style={CODE_BLOCK_STYLE}>{JSON.stringify(result, null, 2)}</pre>
-    </details>
-  );
-}
 
 export function AskPage() {
   const [question, setQuestion] = useState("");
@@ -142,7 +97,7 @@ export function AskPage() {
           <p style={{ fontWeight: 600, margin: "2px 0 14px" }}>{state.response.question}</p>
 
           {state.response.status === "unavailable" && (
-            <UnavailableBlock title="Ask VeNdO is unavailable right now" note={state.response.reason} />
+            <UnavailableBlock title="Ask VeNdO is unavailable right now" note="Please try again in a moment." />
           )}
 
           {state.response.status === "unsupported" && (
@@ -156,8 +111,6 @@ export function AskPage() {
               ) : (
                 <p style={{ fontSize: 13.5, lineHeight: 1.5 }}>{state.response.answer}</p>
               )}
-              <IntentSummary intent={state.response.intent} />
-              <ResultSummary result={state.response.result} />
             </>
           )}
         </div>

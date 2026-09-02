@@ -235,16 +235,10 @@ export default async function insightsRoutes(app: FastifyInstance) {
       insights.push(...insightsFromDataHealth(catalogHealth, nowIso));
 
       const note =
-        `${insights.length} evidence-backed insight(s) across Sales (fleet order-volume/item-quantity baseline ` +
-        `deviations + per-salesman benchmarking flags), Customer (ordering-gap + quantity-anomaly, scoped to the ` +
-        `top ${TOP_CUSTOMER_LIMIT} customers by order_count), Item (quantity-trend only, scoped to the top ` +
-        `${TOP_ITEM_LIMIT} items by quantity - concentrated-customer/low-penetration/high-frequency-low-quantity ` +
-        `item signals are not ported here, see ItemDetailPage for those directly), Operations (request-volume ` +
-        `baseline deviation + rejection-rate vs. previous period), AI (item/intent correction-rate hotspots vs. ` +
-        `the fleet-wide overall correction rate, min sample size ${AI_MIN_SAMPLE_SIZE}), and Data Quality (nonzero ` +
-        `invalid-item-reference lines, orders with zero lines, duplicate-order groups, unassigned customers). An ` +
-        `empty list for any category means the engine ran and genuinely found nothing to flag there, not that the ` +
-        `category is unbuilt.`;
+        `${insights.length} signal(s) found across Sales, Customers (based on the top ${TOP_CUSTOMER_LIMIT} by ` +
+        `order volume), Items (based on the top ${TOP_ITEM_LIMIT} by quantity - see an item's own page for ` +
+        `further signals), Operations, AI Quality, and Data Quality. An empty category means nothing needs ` +
+        `attention there right now, not that it hasn't been checked.`;
 
       return reply.send({
         insights,

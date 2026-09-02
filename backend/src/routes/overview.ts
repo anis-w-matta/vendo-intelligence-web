@@ -290,7 +290,7 @@ export default async function overviewRoutes(app: FastifyInstance) {
           formula: "COUNT(DISTINCT (order_nb, order_type))",
           completeness: ordersCompleteness,
           completeness_note: orders.orders_excluded_missing_commit_date > 0
-            ? `${orders.orders_excluded_missing_commit_date} order(s) excluded - no commit date recorded (pre-Phase-2 legacy orders)`
+            ? `${orders.orders_excluded_missing_commit_date} order(s) excluded - no completion date on file (older records from before our order-tracking upgrade)`
             : undefined,
         }),
         total_item_quantity: metric({
@@ -331,7 +331,7 @@ export default async function overviewRoutes(app: FastifyInstance) {
           period, filters: filtersRecord, source: "backend pending_request",
           formula: "median(decided_at - created_at) over rejected/committed requests",
           completeness: requests.turnaround.sample_size > 0 ? "PARTIAL" as CompletenessStatus : "UNAVAILABLE" as CompletenessStatus,
-          completeness_note: "Only requests committed after Phase 2 shipped keep their row - completeness grows over time",
+          completeness_note: "Only includes requests processed after our request-tracking upgrade; coverage improves over time",
         }),
       };
 
@@ -398,22 +398,14 @@ export default async function overviewRoutes(app: FastifyInstance) {
       }
 
       const attentionNote = attentionInsights.length > 0
-        ? `${attentionInsights.length} evidence-backed signal(s) found across order volume, fleet item quantity, `
-          + `request volume, rejection, and customer ordering-gap (scoped to the top ${ATTENTION_TOP_CUSTOMER_LIMIT} `
-          + `customers by order_count - not the full fleet, see /api/admin/intelligence/customers/:cust_nb for any customer's own signals). `
-          + `Turnaround and per-item quantity trend are intentionally not computed here: turnaround has no stored `
-          + `historical percentile series to baseline against (only current-period summary percentiles exist - see `
-          + `backendClient.getRequestsSummary's documented limitation; a two-call before/after comparison was judged `
-          + `not a real 7/30-day baseline and was left out rather than presented as rigor it doesn't have). Per-item `
-          + `quantity trend already exists on each item's own detail page (frontend/src/lib/itemSignals.ts, Phase 9) - `
-          + `looping it fleet-wide here would need one additional trend fetch per item with no existing bounded `
-          + `top-item-trend call to reuse, the same performance concern Phase 8 already ruled out for looping customers.`
-        : `No signals in the current data across order volume, fleet item quantity, request volume, rejection, and `
-          + `customer ordering-gap (scoped to the top ${ATTENTION_TOP_CUSTOMER_LIMIT} customers by order_count) - a `
-          + `quiet system, not an unbuilt engine. Turnaround and per-item quantity trend are intentionally not `
-          + `computed here: turnaround has no stored historical percentile series to baseline against (only `
-          + `current-period summary percentiles exist), and per-item quantity trend already exists on each item's `
-          + `own detail page (frontend/src/lib/itemSignals.ts, Phase 9) rather than being looped fleet-wide here.`;
+        ? `${attentionInsights.length} signal(s) found across order volume, item quantity, request volume, `
+          + `rejections, and customer ordering gaps (based on the top ${ATTENTION_TOP_CUSTOMER_LIMIT} customers by `
+          + `order volume - see an individual customer's page for their own signals). Turnaround and per-item `
+          + `quantity trend aren't included here yet; item-level trends are available on each item's own page.`
+        : `No unusual signals in the current data across order volume, item quantity, request volume, rejections, `
+          + `and customer ordering gaps (based on the top ${ATTENTION_TOP_CUSTOMER_LIMIT} customers by order `
+          + `volume) - a quiet period, not a sign the system isn't working. Turnaround and per-item quantity trend `
+          + `aren't included here yet; item-level trends are available on each item's own page.`;
 
       const salesmenByLoginId = new Map(roster.map((s) => [s.login_id, s]));
       const salesBySalesman = salesmenOrders.by_salesman
@@ -433,7 +425,7 @@ export default async function overviewRoutes(app: FastifyInstance) {
           filters: filtersRecord, period,
           completeness: salesmenOrders.orders_excluded_missing_commit_date > 0 ? "PARTIAL" : "COMPLETE",
           completeness_note: salesmenOrders.orders_excluded_missing_commit_date > 0
-            ? `${salesmenOrders.orders_excluded_missing_commit_date} order(s) excluded - no resolvable point-in-time salesman attribution`
+            ? `${salesmenOrders.orders_excluded_missing_commit_date} order(s) excluded - couldn't determine which salesman owned the customer at the time`
             : undefined,
         }),
         request_volume_over_time: envelope(requests.volume_over_time, {
@@ -445,7 +437,7 @@ export default async function overviewRoutes(app: FastifyInstance) {
           formula: "COUNT(DISTINCT (order_nb, order_type)) / COUNT(order_details.*) / SUM(order_details.qty), grouped by commit month",
           completeness: ordersTrend.orders_excluded_missing_commit_date > 0 ? "PARTIAL" : "COMPLETE",
           completeness_note: ordersTrend.orders_excluded_missing_commit_date > 0
-            ? `${ordersTrend.orders_excluded_missing_commit_date} order(s) excluded - no commit date recorded (pre-Phase-2 legacy orders)`
+            ? `${ordersTrend.orders_excluded_missing_commit_date} order(s) excluded - no completion date on file (older records from before our order-tracking upgrade)`
             : undefined,
         }),
         customers: envelope(
@@ -453,15 +445,15 @@ export default async function overviewRoutes(app: FastifyInstance) {
           {
             source: "catalog-service customer", filters: {}, period: null,
             completeness: "PARTIAL",
-            completeness_note: "active/inactive not computed in this pass - only assigned/unassigned counts",
+            completeness_note: "Shows assigned vs. unassigned customers only; an active/inactive breakdown isn't available yet",
           },
         ),
-        // Phase 12 Attention Center: real evidence-backed signals, never
-        // padded with a weak one just to have content. "PARTIAL" reflects
-        // that 5 of the 7 required categories are computed for real here
-        // (order volume, quantity, request, rejection, customer ordering-
-        // gap) while turnaround and per-item quantity trend are
-        // deliberately out of scope - see attentionNote for exactly why.
+        // Attention Center: real evidence-backed signals, never padded
+        // with a weak one just to have content. "PARTIAL" reflects that
+        // most required categories are computed for real here (order
+        // volume, quantity, request, rejection, customer ordering-gap)
+        // while turnaround and per-item quantity trend are deliberately
+        // out of scope - see attentionNote for a plain-language summary.
         attention: {
           insights: attentionInsights,
           status: "PARTIAL" as CompletenessStatus,

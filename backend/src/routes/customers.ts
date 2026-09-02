@@ -39,7 +39,7 @@ export default async function customersRoutes(app: FastifyInstance) {
           {
             source: "catalog-service customer/order_header/order_details",
             filters: { ...f }, period, completeness: "PARTIAL",
-            completeness_note: "active/inactive not computed in this pass - only assigned/unassigned counts",
+            completeness_note: "Shows assigned vs. unassigned customers only; an active/inactive breakdown isn't available yet",
           },
         ),
       );

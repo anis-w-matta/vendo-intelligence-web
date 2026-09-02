@@ -158,7 +158,7 @@ export default async function salesmanDetailRoutes(app: FastifyInstance) {
             {
               source: "catalog-service order_header/customer_ownership_history + backend pending_request/salesman",
               filters: { ...f }, period, completeness: "PARTIAL",
-              completeness_note: `${orderMetrics.orders_excluded_missing_commit_date} order(s) excluded fleet-wide - no resolvable point-in-time salesman attribution. fleet_average is computed across ${fleetAverage.sample_size} active salesman(s) - an investigation signal, not a performance verdict.`,
+              completeness_note: `${orderMetrics.orders_excluded_missing_commit_date} order(s) excluded fleet-wide - couldn't determine which salesman owned the customer at the time. The fleet average is based on ${fleetAverage.sample_size} active salesman(s) and is meant as a comparison point, not a performance verdict.`,
             },
           ),
         );

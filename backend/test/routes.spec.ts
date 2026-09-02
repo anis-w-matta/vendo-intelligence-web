@@ -95,7 +95,7 @@ describe("all 13+ intelligence routes", () => {
     expect(body.attention.status).toBe("PARTIAL");
     expect(body.attention.note).toMatch(/rejection/i);
     expect(body.attention.note).toMatch(/turnaround/i);
-    expect(body.attention.note).toMatch(/quiet system/i);
+    expect(body.attention.note).toMatch(/quiet period/i);
   });
 
   it("overview's Attention Center surfaces a real order-volume signal with full evidence when the daily trend actually spikes", async () => {

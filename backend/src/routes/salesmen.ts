@@ -70,7 +70,7 @@ export default async function salesmenRoutes(app: FastifyInstance) {
         envelope(rows, {
           source: "catalog-service order_header/order_details/customer_ownership_history + backend pending_request/salesman",
           filters: { ...f }, period, completeness: "PARTIAL",
-          completeness_note: `${orderMetrics.orders_excluded_missing_commit_date} order(s) excluded from order metrics - no resolvable point-in-time salesman attribution. Do not rank salesmen by order_count alone - see 06_phase_6_sales_customers_items.md.`,
+          completeness_note: `${orderMetrics.orders_excluded_missing_commit_date} order(s) excluded from these metrics - couldn't determine which salesman owned the customer at the time. Order count alone shouldn't be used to rank salesmen.`,
         }),
       );
     } catch (err) {

@@ -28,7 +28,7 @@ import { handleUpstreamError } from "../lib/errors.js";
 const CORRECTION_TAXONOMY_GAP = {
   status: "UNAVAILABLE" as const,
   note:
-    "Correction taxonomy and prediction-vs-final comparison: UNAVAILABLE. PendingLine stores only the final value after any human edit; no original AI prediction is preserved separately anywhere in the schema. Only whether a line was edited (yes/no) is known - that is what overall_correction_rate, by_confidence_bucket, by_item, by_intent, and trend below all report.",
+    "Not available: we don't currently keep a record of what the AI originally suggested before a human corrected it - only whether a line was edited. The correction-rate figures reflect that yes/no signal.",
 };
 
 export default async function aiQualityRoutes(app: FastifyInstance) {
@@ -70,7 +70,7 @@ export default async function aiQualityRoutes(app: FastifyInstance) {
           {
             source: "backend pending_request_line", filters: { ...f }, period, completeness: "PARTIAL",
             completeness_note:
-              "Scoped to requests whose PendingLine rows still exist - only requests committed after Phase 2 shipped keep this data; anything committed before then has none left. Correction taxonomy and prediction-vs-final comparison are separately UNAVAILABLE - see correction_taxonomy below.",
+              "Only includes requests processed after our AI-review tracking upgrade; earlier requests have no data left. Correction taxonomy and prediction-vs-final comparison are separately unavailable - see below.",
           },
         ),
       );

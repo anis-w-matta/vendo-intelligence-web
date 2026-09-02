@@ -66,8 +66,8 @@ export default async function customerDetailRoutes(app: FastifyInstance) {
 
         const excludedCount = orderTrend.orders_excluded_missing_commit_date;
         const activityNote =
-          'Activity-state classification and the order trend use only orders with a recorded commit date; ' +
-          'a customer whose only orders predate that tracking shows "Insufficient Data" or "New", not a fabricated state.';
+          "Activity status and the order trend use only orders with a recorded completion date; " +
+          'a customer whose orders predate that tracking shows "Insufficient Data" or "New" rather than a guess.';
 
         return reply.send(
           envelope(
@@ -91,7 +91,7 @@ export default async function customerDetailRoutes(app: FastifyInstance) {
               period,
               completeness: excludedCount > 0 ? "PARTIAL" : "COMPLETE",
               completeness_note: excludedCount > 0
-                ? `${excludedCount} order(s) excluded from the trend - no commit date recorded. ${activityNote}`
+                ? `${excludedCount} order(s) excluded from this trend - no completion date on file. ${activityNote}`
                 : activityNote,
             },
           ),

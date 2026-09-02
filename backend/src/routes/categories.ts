@@ -59,7 +59,7 @@ export default async function categoriesRoutes(app: FastifyInstance) {
           source: "catalog-service order_details/item", filters: { ...f }, period,
           completeness: trendExclusions > 0 ? "PARTIAL" : "COMPLETE",
           completeness_note: trendExclusions > 0
-            ? `${trendExclusions} order(s) excluded from category trend(s) - no commit date recorded`
+            ? `${trendExclusions} order(s) excluded from this trend - no completion date on file`
             : undefined,
         }),
       );

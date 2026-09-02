@@ -69,7 +69,7 @@ export default async function itemsRoutes(app: FastifyInstance) {
               period: null,
               completeness: excludedCount > 0 ? "PARTIAL" : "COMPLETE",
               completeness_note: excludedCount > 0
-                ? `${excludedCount} order(s) excluded from the trend - no commit date recorded.`
+                ? `${excludedCount} order(s) excluded from this trend - no completion date on file.`
                 : undefined,
             },
           ),

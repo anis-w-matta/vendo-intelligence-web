@@ -20,7 +20,7 @@ export function DataHealthPage() {
 
   return (
     <>
-      <PageHeader title="Data Health & Trust Center" subtitle="Never hide limitations. What the data can and cannot support." />
+      <PageHeader title="Data Health & Trust Center" subtitle="How complete and reliable the underlying data is." />
       <QueryBoundary state={state}>
         {(env) => (
           <>
@@ -46,8 +46,7 @@ export function DataHealthPage() {
               <div className="card">
                 <div className="section-title">Reconciliation: Order Headers vs Order Details</div>
                 <div className="muted" style={{ fontSize: 12.5, marginBottom: 10 }}>
-                  Plain counts, laid side by side - not a computed match/mismatch verdict beyond what "Order headers
-                  with at least one line" in the Completeness panel already states.
+                  Order counts and their line-item counts, side by side.
                 </div>
                 <div className="data-table-wrap">
                   <table className="data-table">
@@ -123,15 +122,13 @@ export function DataHealthPage() {
             </div>
 
             <div className="card" style={{ marginTop: 14 }}>
-              <div className="section-title">Metric Dictionary</div>
+              <div className="section-title">Metric Definitions</div>
               <div className="data-table-wrap">
                 <table className="data-table">
                   <thead>
                     <tr>
                       <th>Metric</th>
                       <th>Definition</th>
-                      <th>Formula</th>
-                      <th>Source</th>
                       <th>Limitations</th>
                     </tr>
                   </thead>
@@ -140,8 +137,6 @@ export function DataHealthPage() {
                       <tr key={m.metric}>
                         <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{m.metric}</td>
                         <td style={{ whiteSpace: "normal", minWidth: 220 }}>{m.definition}</td>
-                        <td style={{ whiteSpace: "normal", minWidth: 220, fontFamily: "monospace", fontSize: 12 }}>{m.formula}</td>
-                        <td style={{ whiteSpace: "normal" }}>{m.source}</td>
                         <td style={{ whiteSpace: "normal", minWidth: 260 }}>{m.limitations}</td>
                       </tr>
                     ))}

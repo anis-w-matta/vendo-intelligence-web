@@ -30,7 +30,7 @@ export default async function ordersRoutes(app: FastifyInstance) {
             filters: { ...f }, period,
             completeness: summary.orders_excluded_missing_commit_date > 0 ? "PARTIAL" : "COMPLETE",
             completeness_note: summary.orders_excluded_missing_commit_date > 0
-              ? `${summary.orders_excluded_missing_commit_date} order(s) excluded - no commit date recorded`
+              ? `${summary.orders_excluded_missing_commit_date} order(s) excluded - no completion date on file`
               : undefined,
           },
         ),

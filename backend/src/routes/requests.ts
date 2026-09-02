@@ -23,7 +23,7 @@ export default async function requestsRoutes(app: FastifyInstance) {
           source: "backend pending_request/pending_request_line",
           filters: { ...f }, period, completeness: "PARTIAL",
           completeness_note:
-            "Turnaround/rejection for committed requests only reflects requests committed after Phase 2 shipped (rows were previously deleted on commit).",
+            "Turnaround and rejection figures only reflect requests processed after our request-tracking upgrade.",
         }),
       );
     } catch (err) {

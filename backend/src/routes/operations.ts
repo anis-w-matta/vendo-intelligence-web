@@ -57,7 +57,7 @@ export default async function operationsRoutes(app: FastifyInstance) {
           {
             source: "backend pending_request, backend activity_log", filters: { ...f }, period, completeness: "PARTIAL",
             completeness_note:
-              "Turnaround for committed requests only reflects those committed after Phase 2 shipped. sla_compliance is null: no SLA threshold has been defined anywhere in this project. Activity hour-of-day counts (activity.by_hour) are bucketed in UTC, not business-local time.",
+              "Turnaround figures only reflect requests processed after our request-tracking upgrade. SLA compliance isn't shown because no SLA target has been configured yet. Activity-by-hour is currently shown in UTC time, not local business hours.",
           },
         ),
       );
