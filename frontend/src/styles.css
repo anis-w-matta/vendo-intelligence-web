@@ -1,77 +1,86 @@
+/* Palette / type / shape lifted from the VeNdO Android design system
+   (android/core/designsystem: Color.kt, Type.kt, Theme.kt, and the
+   PillButton / StatusBadge / RequestCard components) so this admin web
+   app reads as the same product as the native apps, not a separate
+   generic dashboard. */
 :root {
-  --bg: #f5f6f8;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-alt: #f0f1f4;
-  --border: #e2e4e9;
-  --text: #1a1d24;
-  --text-muted: #676d7a;
-  --text-faint: #9aa0ac;
-  --accent: #3454d1;
-  --accent-weak: #eaeeff;
-  --sidebar-bg: #171a23;
-  --sidebar-text: #c7cad3;
+  --surface-alt: #E9ECEF;
+  --border: #CFCFCF;
+  --text: #000000;
+  --text-muted: #5A5A5A;
+  --text-faint: rgba(90, 90, 90, 0.7);
+  --accent: #4F78D9;
+  --accent-dark: #2F5F88;
+  --accent-weak: rgba(79, 120, 217, 0.16);
+  --sidebar-bg: #202124;
+  --sidebar-text: #CFCFCF;
   --sidebar-text-active: #ffffff;
-  --sidebar-active-bg: #2a2f3d;
-  --status-complete: #1e8e5a;
-  --status-complete-bg: #e5f6ee;
-  --status-partial: #b5790a;
-  --status-partial-bg: #fdf3e0;
-  --status-limited: #b5790a;
-  --status-limited-bg: #fdf3e0;
-  --status-unavailable: #8a8f99;
-  --status-unavailable-bg: #eef0f3;
-  --error: #c53030;
-  --error-bg: #fdecec;
-  /* Phase 13 severity scale - distinct from the completeness badge colors
-     above (INFO reuses the neutral gray, WATCH reuses the existing amber,
-     WARNING is a deeper orange so it reads as a step up from WATCH,
-     CRITICAL reuses --error). */
-  --severity-info: #8a8f99;
-  --severity-info-bg: #eef0f3;
-  --severity-watch: #b5790a;
-  --severity-watch-bg: #fdf3e0;
-  --severity-warning: #c1440e;
-  --severity-warning-bg: #fbe3d3;
-  --severity-critical: #c53030;
-  --severity-critical-bg: #fdecec;
-  --radius: 10px;
+  --sidebar-active-bg: rgba(79, 120, 217, 0.28);
+  --status-complete: #4F78D9;
+  --status-complete-bg: rgba(79, 120, 217, 0.16);
+  --status-partial: #B3261E;
+  --status-partial-bg: rgba(179, 38, 30, 0.14);
+  --status-limited: #B3261E;
+  --status-limited-bg: rgba(179, 38, 30, 0.14);
+  --status-unavailable: #5A5A5A;
+  --status-unavailable-bg: #E9ECEF;
+  --error: #B3261E;
+  --error-bg: rgba(179, 38, 30, 0.14);
+  /* Phase 13 severity scale - the Android palette has no amber, so every
+     step above INFO reuses --error at increasing alpha/weight instead of
+     a separate hue (see StatusBadge.kt: Warning and Danger both key off
+     colorScheme.error). */
+  --severity-info: #5A5A5A;
+  --severity-info-bg: #E9ECEF;
+  --severity-watch: #B3261E;
+  --severity-watch-bg: rgba(179, 38, 30, 0.12);
+  --severity-warning: #B3261E;
+  --severity-warning-bg: rgba(179, 38, 30, 0.18);
+  --severity-critical: #B3261E;
+  --severity-critical-bg: rgba(179, 38, 30, 0.26);
+  --radius: 14px;
+  --radius-card: 18px;
   --shadow: 0 1px 2px rgba(20, 22, 30, 0.06), 0 1px 1px rgba(20, 22, 30, 0.04);
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Arial Black", "Segoe UI Black", "Segoe UI", var(--font);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14161c;
-    --surface: #1c1f28;
-    --surface-alt: #232631;
-    --border: #2c3040;
-    --text: #eceef2;
-    --text-muted: #a2a8b5;
-    --text-faint: #6f7583;
-    --accent: #7086ff;
-    --accent-weak: #232945;
-    --sidebar-bg: #0e1016;
-    --sidebar-text: #a2a8b5;
+    --bg: #202124;
+    --surface: #252525;
+    --surface-alt: #333333;
+    --border: #5A5A5A;
+    --text: #ffffff;
+    --text-muted: #CFCFCF;
+    --text-faint: rgba(207, 207, 207, 0.7);
+    --accent: #4F78D9;
+    --accent-dark: #2F5F88;
+    --accent-weak: rgba(79, 120, 217, 0.24);
+    --sidebar-bg: #171717;
+    --sidebar-text: #CFCFCF;
     --sidebar-text-active: #ffffff;
-    --sidebar-active-bg: #232631;
-    --status-complete: #3ecb8b;
-    --status-complete-bg: #123024;
-    --status-partial: #e0a83f;
-    --status-partial-bg: #332708;
-    --status-limited: #e0a83f;
-    --status-limited-bg: #332708;
-    --status-unavailable: #8a8f99;
-    --status-unavailable-bg: #23262f;
-    --error: #ef6767;
-    --error-bg: #3a1616;
-    --severity-info: #8a8f99;
-    --severity-info-bg: #23262f;
-    --severity-watch: #e0a83f;
-    --severity-watch-bg: #332708;
-    --severity-warning: #ff8a4c;
-    --severity-warning-bg: #3a2210;
-    --severity-critical: #ef6767;
-    --severity-critical-bg: #3a1616;
+    --sidebar-active-bg: rgba(79, 120, 217, 0.32);
+    --status-complete: #4F78D9;
+    --status-complete-bg: rgba(79, 120, 217, 0.24);
+    --status-partial: #ff8a80;
+    --status-partial-bg: rgba(179, 38, 30, 0.28);
+    --status-limited: #ff8a80;
+    --status-limited-bg: rgba(179, 38, 30, 0.28);
+    --status-unavailable: #CFCFCF;
+    --status-unavailable-bg: #333333;
+    --error: #ff8a80;
+    --error-bg: rgba(179, 38, 30, 0.28);
+    --severity-info: #CFCFCF;
+    --severity-info-bg: #333333;
+    --severity-watch: #ff8a80;
+    --severity-watch-bg: rgba(179, 38, 30, 0.2);
+    --severity-warning: #ff8a80;
+    --severity-warning-bg: rgba(179, 38, 30, 0.3);
+    --severity-critical: #ff8a80;
+    --severity-critical-bg: rgba(179, 38, 30, 0.4);
   }
 }
 
@@ -119,24 +128,27 @@ button, input, select {
   align-items: center;
   gap: 10px;
   padding: 0 8px 20px;
-  font-weight: 700;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
   color: var(--sidebar-text-active);
   font-size: 15px;
 }
 
 .sidebar .brand-mark {
-  width: 28px; height: 28px; border-radius: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
   background: var(--accent);
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; color: white; flex-shrink: 0;
+  font-size: 13px; font-weight: 900; font-family: var(--font-display);
+  color: white; flex-shrink: 0;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 10px;
-  border-radius: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
   color: var(--sidebar-text);
   text-decoration: none;
   font-size: 13.5px;
@@ -145,7 +157,7 @@ button, input, select {
 }
 
 .nav-link:hover { background: rgba(255, 255, 255, 0.06); color: var(--sidebar-text-active); }
-.nav-link.active { background: var(--sidebar-active-bg); color: var(--sidebar-text-active); font-weight: 600; }
+.nav-link.active { background: var(--sidebar-active-bg); color: var(--sidebar-text-active); font-weight: 700; }
 .nav-icon { width: 18px; text-align: center; flex-shrink: 0; }
 
 .sidebar-footer {
@@ -174,8 +186,10 @@ button, input, select {
 }
 
 .page-title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
   margin: 0 0 4px;
 }
 
@@ -208,8 +222,8 @@ button, input, select {
 
 .filter-field input, .filter-field select {
   border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px 9px;
+  border-radius: 999px;
+  padding: 6px 12px;
   background: var(--surface);
   color: var(--text);
   min-width: 130px;
@@ -224,16 +238,17 @@ button, input, select {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  border-radius: 7px;
-  padding: 7px 14px;
+  border-radius: 999px;
+  padding: 8px 20px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: var(--font-display);
   font-size: 13px;
 }
-.btn:hover { background: var(--surface-alt); }
+.btn:hover { border-color: var(--accent); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
-.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
 .btn-ghost { border-color: transparent; }
 
 /* ---- grid / cards ---- */
@@ -247,7 +262,7 @@ button, input, select {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow);
   padding: 16px 18px;
 }
@@ -269,8 +284,9 @@ button, input, select {
 }
 
 .kpi-card .kpi-value {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 27px;
+  font-weight: 800;
+  font-family: var(--font-display);
   line-height: 1;
 }
 
@@ -284,6 +300,7 @@ button, input, select {
 .chart-container .chart-title {
   font-size: 13.5px;
   font-weight: 700;
+  font-family: var(--font-display);
   margin-bottom: 2px;
   display: flex;
   align-items: center;
@@ -297,16 +314,19 @@ button, input, select {
   margin-bottom: 12px;
 }
 
-/* ---- badges ---- */
+/* ---- badges ----
+   Pill shape + tone pairs already match StatusBadge.kt (VendoTone); only
+   the color values changed above. */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: 11px;
   font-weight: 700;
+  font-family: var(--font-display);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
   white-space: nowrap;
 }
@@ -344,7 +364,7 @@ button, input, select {
   text-transform: none;
   letter-spacing: normal;
   padding: 8px 10px;
-  border-radius: 7px;
+  border-radius: 10px;
   width: 240px;
   z-index: 10;
   box-shadow: var(--shadow);
@@ -372,7 +392,7 @@ button, input, select {
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-.data-table tbody tr:hover { background: var(--surface-alt); }
+.data-table tbody tr:hover { background: var(--accent-weak); }
 .data-table a { text-decoration: none; font-weight: 600; }
 
 /* ---- states ---- */
@@ -382,7 +402,7 @@ button, input, select {
   color: var(--text-muted);
 }
 .state-block .state-icon { font-size: 22px; margin-bottom: 8px; }
-.state-block .state-title { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.state-block .state-title { font-weight: 700; font-family: var(--font-display); color: var(--text); margin-bottom: 4px; }
 
 .banner {
   display: flex;
@@ -414,14 +434,16 @@ button, input, select {
   gap: 12px;
   padding: 14px 16px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-card);
   background: var(--surface);
 }
 .insight-card .insight-icon { font-size: 18px; }
-.insight-card .insight-title { font-weight: 700; font-size: 13.5px; margin-bottom: 3px; }
+.insight-card .insight-title { font-weight: 700; font-family: var(--font-display); font-size: 13.5px; margin-bottom: 3px; }
 .insight-card .insight-body { font-size: 12.5px; color: var(--text-muted); }
 
-/* ---- login ---- */
+/* ---- login ----
+   Blue-bordered card, same treatment as the Android RequestCard - the
+   one place on this admin app where that emphasis earns its keep. */
 .login-shell {
   min-height: 100vh;
   display: flex;
@@ -432,15 +454,18 @@ button, input, select {
 .login-card {
   width: 340px;
   padding: 28px;
+  border: 2px solid var(--accent);
+  border-radius: 20px;
+  box-shadow: none;
 }
-.login-card h1 { font-size: 18px; margin: 0 0 4px; }
+.login-card h1 { font-size: 19px; font-family: var(--font-display); font-weight: 800; margin: 0 0 4px; }
 .login-card p.sub { color: var(--text-muted); margin: 0 0 20px; font-size: 13px; }
 .login-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
 .login-field label { font-size: 12.5px; font-weight: 600; }
 .login-field input {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 11px;
+  border-radius: 999px;
+  padding: 9px 14px;
   background: var(--surface);
   color: var(--text);
 }
@@ -449,6 +474,7 @@ button, input, select {
 .section-title {
   font-size: 14px;
   font-weight: 700;
+  font-family: var(--font-display);
   margin: 0 0 10px;
 }
 
