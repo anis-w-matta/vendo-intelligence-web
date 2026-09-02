@@ -13,6 +13,7 @@ import { OperationsPage } from "./pages/OperationsPage";
 import { AiQualityPage } from "./pages/AiQualityPage";
 import { InsightsPage } from "./pages/InsightsPage";
 import { DataHealthPage } from "./pages/DataHealthPage";
+import { AskPage } from "./pages/AskPage";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { session } = useAuth();
@@ -42,6 +43,7 @@ function RootRoutes() {
         <Route path="/ai-quality" element={<AiQualityPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/data-health" element={<DataHealthPage />} />
+        <Route path="/ask" element={<AskPage />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

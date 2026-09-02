@@ -329,6 +329,27 @@ export function generateBriefing(factsList: InsightFacts[]): Promise<GeminiResul
   return callGeminiCached(key, BRIEFING_TTL_MS, briefingPrompt(factsList));
 }
 
+// ---------------------------------------------------------------------
+// Generic prompt call (Phase 15, Ask VeNdO Intelligence)
+// ---------------------------------------------------------------------
+
+// Ask VeNdO needs two Gemini calls that don't fit either fixed shape
+// above: (1) classify a free-text question into one of a small, closed
+// set of structured intents, and (2) explain an already-verified result
+// for one of those intents. Neither is an InsightFacts object, so
+// explainInsight/generateBriefing don't apply - but per this module's own
+// "the ONLY module in this repo that talks to Gemini" rule, Ask VeNdO
+// must not open a second fetch()/HTTP wrapper of its own either. This is
+// the single additive export that lets it reuse the exact same
+// call/cache/timeout/malformed-response machinery above (callGemini,
+// callGeminiCached, SAFETY_INSTRUCTIONS via callGemini's
+// systemInstruction) for caller-built prompt text, keyed and ttl'd by the
+// caller. All prompt construction and response validation for Ask VeNdO
+// stays in backend/src/lib/askEngine.ts - this function only forwards.
+export function callGeminiWithPrompt(cacheKey: string, ttlMs: number, promptText: string): Promise<GeminiResult> {
+  return callGeminiCached(cacheKey, ttlMs, promptText);
+}
+
 // Test-only: clears the module-level cache so caching assertions in one
 // test (e.g. "a second call within the TTL doesn't re-fetch") don't leak
 // state into another. Not used anywhere outside backend/test/.

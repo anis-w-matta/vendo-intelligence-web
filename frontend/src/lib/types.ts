@@ -589,6 +589,66 @@ export interface GeminiBriefingUnavailable {
 }
 export type GeminiBriefingResult = GeminiBriefingOk | GeminiBriefingUnavailable;
 
+// Phase 15 (Ask VeNdO Intelligence): mirrors backend/src/lib/askEngine.ts's
+// AskIntent exactly - the same small, closed set of structured intents
+// Gemini's classification is validated against server-side. The frontend
+// never re-derives or re-validates this itself; it only ever renders the
+// already-validated intent the BFF returns, for transparency (Phase 15's
+// "verified facts first" ethos - an admin can see this isn't just prose).
+export type AskSalesmanRankingMetric =
+  | "order_count"
+  | "item_quantity"
+  | "rejection_rate"
+  | "median_turnaround_seconds"
+  | "ai_correction_rate";
+
+export type AskIntent =
+  | {
+      type: "salesman_ranking";
+      metric: AskSalesmanRankingMetric;
+      sort: "desc" | "asc";
+      limit: number;
+      timeframe: "current_month" | "all_time";
+    }
+  | { type: "insight_lookup"; category: InsightCategory }
+  | { type: "ai_quality_summary" }
+  | { type: "operations_summary" }
+  | { type: "data_health_summary" }
+  | { type: "unsupported"; reason: string };
+
+// `result` is intentionally `unknown` here (not a discriminated-by-intent
+// type) - it is a bounded, intent-shaped object the BFF built specifically
+// for this one question (see askEngine.ts's executeAskIntent), rendered
+// read-only as pretty-printed JSON for transparency rather than mapped
+// into a dedicated UI per intent shape.
+export interface AskResponseUnavailable {
+  question: string;
+  generated_at: string;
+  status: "unavailable";
+  reason: string;
+  intent: null;
+  result: null;
+}
+export interface AskResponseUnsupported {
+  question: string;
+  generated_at: string;
+  status: "unsupported";
+  reason: string;
+  intent: AskIntent;
+  result: null;
+}
+export interface AskResponseOk {
+  question: string;
+  generated_at: string;
+  status: "ok";
+  intent: AskIntent;
+  result: unknown;
+  answer: string;
+  insufficient_data: boolean;
+  cached: boolean;
+}
+export type AskResponse = AskResponseUnavailable | AskResponseUnsupported | AskResponseOk;
+
 export interface Filters {
   date_from?: string;
   date_to?: string;

@@ -102,4 +102,9 @@ export const api = {
   explainInsight: (insight: import("./types").Insight) =>
     postJson<import("./types").GeminiExplainResult>("/api/admin/intelligence/insights/explain", insight),
   briefing: () => request<import("./types").GeminiBriefingResult>("/api/admin/intelligence/briefing"),
+  // Phase 15 (Ask VeNdO Intelligence) - question -> classified intent ->
+  // verified result -> Gemini explanation, all computed server-side (see
+  // backend/src/routes/ask.ts). Only ever fires on an explicit submit,
+  // same "no automatic Gemini call" discipline as explainInsight above.
+  ask: (question: string) => postJson<import("./types").AskResponse>("/api/admin/intelligence/ask", { question }),
 };

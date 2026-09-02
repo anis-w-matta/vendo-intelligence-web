@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: "/ai-quality", label: "AI Quality", icon: "✓" },
   { to: "/insights", label: "Insights", icon: "✦" },
   { to: "/data-health", label: "Data Health", icon: "⛁" },
+  { to: "/ask", label: "Ask VeNdO", icon: "?" },
 ];
 
 export function Sidebar({ userName, onSignOut }: { userName: string; onSignOut: () => void }) {

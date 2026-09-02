@@ -16,6 +16,7 @@ import aiQualityRoutes from "./routes/aiQuality.js";
 import insightsRoutes from "./routes/insights.js";
 import dataHealthRoutes from "./routes/dataHealth.js";
 import geminiExplainRoutes from "./routes/geminiExplain.js";
+import askRoutes from "./routes/ask.js";
 
 export function buildApp() {
   const app = Fastify({ logger: true });
@@ -32,7 +33,7 @@ export function buildApp() {
     overviewRoutes, salesmenRoutes, salesmanDetailRoutes, ordersRoutes,
     requestsRoutes, operationsRoutes, customersRoutes, customerDetailRoutes,
     itemsRoutes, categoriesRoutes, aiQualityRoutes, insightsRoutes, dataHealthRoutes,
-    geminiExplainRoutes,
+    geminiExplainRoutes, askRoutes,
   ];
   for (const register of routeModules) {
     app.register(register);
