@@ -518,8 +518,37 @@ export interface OverviewData {
   };
 }
 
+// Phase 13 (Insight Engine): the unified shape every /insights entry is
+// reshaped into, mirroring backend/src/lib/insightEngine.ts's `Insight`
+// interface exactly. Every field this phase's spec requires is always
+// populated - never a bare label. `explanation` is always an
+// "Investigate: ..." observation built entirely from this same object's
+// other fields (reused verbatim from whichever Phase 7/8/9/11/12/16
+// source module produced it), never an independently-worded verdict.
+// `severity` is derived from the same deviation magnitude the source
+// module already computed - see insightEngine.ts's classify* functions
+// for the exact, documented thresholds per category.
+export type InsightCategory = "Sales" | "Customer" | "Item" | "Operations" | "AI" | "Data Quality";
+export type InsightSeverity = "INFO" | "WATCH" | "WARNING" | "CRITICAL";
+
+export interface Insight {
+  category: InsightCategory;
+  severity: InsightSeverity;
+  title: string;
+  explanation: string;
+  metric: string;
+  current_value: number;
+  baseline: number;
+  change_abs: number;
+  change_pct: number | null;
+  sample_size: number;
+  affected_entity: string;
+  timestamp: string;
+  drill_down: string;
+}
+
 export interface InsightsData {
-  insights: unknown[];
+  insights: Insight[];
   status: CompletenessStatus;
   note: string;
   last_updated: string;

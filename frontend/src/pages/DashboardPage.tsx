@@ -197,7 +197,12 @@ export function DashboardPage() {
               </div>
 
               <div className="card">
-                <div className="section-title">Attention Center</div>
+                <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span>Attention Center</span>
+                  <Link to="/insights" className="muted" style={{ fontSize: 11.5, fontWeight: 400 }}>
+                    Full Insight Engine (all categories, with severity) &rarr;
+                  </Link>
+                </div>
                 {/* Phase 12 (Anomaly Detection Engine): every insight below is
                     an evidence-backed observation, never a verdict - each
                     `reason` string is reconstructed entirely from the current

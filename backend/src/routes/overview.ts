@@ -57,7 +57,13 @@ export interface AttentionInsight {
 // is the same pattern in the opposite direction. Any change to the
 // thresholds/behavior here should be mirrored there, and vice versa.
 
-interface DailyPoint {
+// `export`ed (beyond what this route itself needs) so backend/src/routes/
+// insights.ts (Phase 13) can reuse this exact arithmetic/fetch-shaping
+// rather than re-duplicating it a second time - a plain same-package
+// import, not the frontend/backend module-graph split documented above
+// (that split is only ever backend-vs-frontend; two backend routes are
+// the same TypeScript project and can import each other freely).
+export interface DailyPoint {
   bucket: string; // "YYYY-MM-DD"
   value: number;
 }
@@ -130,7 +136,7 @@ function detectBaselineDeviation(series: DailyPoint[], windowDays: BaselineWindo
   };
 }
 
-function fleetBaselineInsights(
+export function fleetBaselineInsights(
   series: DailyPoint[],
   category: "order_volume" | "quantity" | "request",
   metricLabel: string,
@@ -160,7 +166,7 @@ function fleetBaselineInsights(
     });
 }
 
-function aggregateDailyVolume(points: { day: string; count: number }[]): DailyPoint[] {
+export function aggregateDailyVolume(points: { day: string; count: number }[]): DailyPoint[] {
   const byDay = new Map<string, number>();
   for (const p of points) {
     const day = p.day.slice(0, 10); // normalize a possible timestamp to "YYYY-MM-DD"
@@ -177,7 +183,7 @@ function aggregateDailyVolume(points: { day: string; count: number }[]): DailyPo
 // (not at) REJECTION_BASELINE_RATIO.
 const REJECTION_BASELINE_RATIO = 1.5;
 
-function rejectionInsight(
+export function rejectionInsight(
   currentRate: number | null,
   previousRate: number | null,
   currentPeriod: Period,
@@ -215,7 +221,7 @@ function rejectionInsight(
 // performance problem, and that reasoning still holds here).
 const ATTENTION_TOP_CUSTOMER_LIMIT = 10;
 
-function customerGapInsight(
+export function customerGapInsight(
   custNb: string,
   customerName: string,
   signal: LongGapSignal,

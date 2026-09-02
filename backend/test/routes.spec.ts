@@ -120,11 +120,65 @@ describe("all 13+ intelligence routes", () => {
     expect(body.attention.status).toBe("PARTIAL");
   });
 
-  it("insights is an honest stub, not fabricated data", async () => {
+  it("insights reshapes the real Phase 7/8/9/11/12/16 signals into the Insight schema, not a fabricated stub", async () => {
+    // With the shared canned mock data (mocks.ts), the fleet baseline
+    // series are too sparse/wrong-grained to fire (same reasoning as the
+    // Attention Center's own "stays honest when quiet" test above), and
+    // the one mocked customer's history/item's trend are both too flat/
+    // short to fire their signals either - so Sales/Customer/Item/
+    // Operations from the Phase 12 material are quiet except for one real
+    // Phase 7 salesman-benchmarking flag (sm_a's rejection rate is well
+    // above the 2-salesman fleet average). AI and Data Quality DO fire for
+    // real off this mock data (a real correction-rate hotspot on item I1,
+    // a real invalid-item-ref rate, and a real unassigned-customer rate) -
+    // proving the engine actually computes real evidence, never padding.
     const res = await app.inject({ method: "GET", url: "/api/admin/intelligence/insights", headers: AUTH });
     const body = res.json();
-    expect(body.insights).toEqual([]);
-    expect(body.status).toBe("UNAVAILABLE");
+    expect(body.status).toBe("PARTIAL");
+    expect(Array.isArray(body.insights)).toBe(true);
+    expect(body.insights.length).toBeGreaterThan(0);
+
+    const byCategory: Record<string, number> = {};
+    for (const insight of body.insights) {
+      byCategory[insight.category] = (byCategory[insight.category] ?? 0) + 1;
+      // Every required Phase 13 field is populated on every insight.
+      expect(insight.severity).toMatch(/^(INFO|WATCH|WARNING|CRITICAL)$/);
+      expect(insight.title).toBeTruthy();
+      expect(insight.explanation).toBeTruthy();
+      expect(insight.metric).toBeTruthy();
+      expect(typeof insight.current_value).toBe("number");
+      expect(typeof insight.baseline).toBe("number");
+      expect(typeof insight.change_abs).toBe("number");
+      expect(typeof insight.sample_size).toBe("number");
+      expect(insight.affected_entity).toBeTruthy();
+      expect(insight.timestamp).toBeTruthy();
+      expect(insight.drill_down).toMatch(/^\//);
+    }
+    expect(byCategory["Sales"]).toBe(1);
+    expect(byCategory["AI"]).toBe(1);
+    expect(byCategory["Data Quality"]).toBe(2);
+    expect(byCategory["Customer"]).toBeUndefined();
+    expect(byCategory["Item"]).toBeUndefined();
+    expect(byCategory["Operations"]).toBeUndefined();
+  });
+
+  it("insights surfaces a real order-volume signal (Sales) when the daily trend actually spikes, same evidence as the Attention Center", async () => {
+    vi.resetModules();
+    mockAllClients({ dailyOrdersTrend: ordersTrendDaily });
+    const { buildApp: buildAppSpiking } = await import("../src/server.js");
+    const appSpiking = buildAppSpiking();
+    await appSpiking.ready();
+
+    const res = await appSpiking.inject({ method: "GET", url: "/api/admin/intelligence/insights", headers: AUTH });
+    const body = res.json();
+    const orderVolumeInsight = body.insights.find(
+      (i: { category: string; metric: string }) => i.category === "Sales" && i.metric === "Fleet daily order count",
+    );
+    expect(orderVolumeInsight).toBeTruthy();
+    expect(orderVolumeInsight.explanation).toMatch(/^Investigate: current fleet daily order count/);
+    expect(orderVolumeInsight.current_value).toBeGreaterThan(orderVolumeInsight.baseline);
+    expect(orderVolumeInsight.change_pct).toBeGreaterThan(30);
+    expect(orderVolumeInsight.drill_down).toBe("/sales");
   });
 
   it("salesmen response marks incomplete attribution rather than hiding it", async () => {
