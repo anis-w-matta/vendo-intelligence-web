@@ -38,7 +38,7 @@ export default async function salesmanDetailRoutes(app: FastifyInstance) {
       const period = periodOf(f);
 
       try {
-        const [roster, orderMetrics, requestMetrics, topCustomers, ordersTrend, requestsSummary] = await Promise.all([
+        const [roster, orderMetrics, requestMetrics, topCustomers, ordersTrend, requestsSummary, customersPerSalesman] = await Promise.all([
           backendClient.listSalesmen(authorization, true),
           // Note: getSalesmenOrderMetrics/getSalesmenRequestMetrics are
           // fleet-wide breakdowns (their param types deliberately Omit
@@ -58,6 +58,10 @@ export default async function salesmanDetailRoutes(app: FastifyInstance) {
           // salesman via salesman_id - RequestsFilter.salesman_id is
           // honored by every field on this endpoint (verified server-side).
           backendClient.getRequestsSummary(authorization, toRequestsParams(f)),
+          // Current portfolio size (live headcount) - see
+          // catalogClient.getCustomersPerSalesman's doc comment for why
+          // this is separate from orderMetrics' customer_count.
+          catalogClient.getCustomersPerSalesman(),
         ]);
 
         const salesman = roster.find((s) => s.login_id === id);
@@ -67,11 +71,14 @@ export default async function salesmanDetailRoutes(app: FastifyInstance) {
 
         const orderByLoginId = new Map(orderMetrics.by_salesman.map((r) => [r.salesman_id, r]));
         const requestByLoginId = new Map(requestMetrics.map((r) => [r.salesman_id, r]));
+        const currentCustomersByLoginId = new Map(
+          customersPerSalesman.map((r) => [r.salesman_id, r.current_customer_count]));
 
         const orders = orderByLoginId.get(id);
         const requests = requestByLoginId.get(id);
         const orderCount = orders?.order_count ?? 0;
         const customerCount = orders?.customer_count ?? 0;
+        const currentCustomerCount = currentCustomersByLoginId.get(id) ?? 0;
         const itemQuantityNum = Number(orders?.item_quantity ?? "0");
 
         // Fleet benchmarking (#4): mean order_count/item_quantity/
@@ -132,6 +139,7 @@ export default async function salesmanDetailRoutes(app: FastifyInstance) {
               order_line_count: orders?.order_line_count ?? 0,
               item_quantity: orders?.item_quantity ?? "0",
               customer_count: customerCount,
+              current_customer_count: currentCustomerCount,
               // Phase 7 gaps #1/#2: same divide-by-zero-guarded arithmetic
               // as salesmen.ts's fleet-table row.
               orders_per_customer: customerCount ? orderCount / customerCount : null,

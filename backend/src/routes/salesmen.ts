@@ -21,14 +21,20 @@ export default async function salesmenRoutes(app: FastifyInstance) {
     const period = periodOf(f);
 
     try {
-      const [roster, orderMetrics, requestMetrics] = await Promise.all([
+      const [roster, orderMetrics, requestMetrics, customersPerSalesman] = await Promise.all([
         backendClient.listSalesmen(authorization),
         catalogClient.getSalesmenOrderMetrics(toOrdersParams(f)),
         backendClient.getSalesmenRequestMetrics(authorization, toRequestsParams(f)),
+        // Current portfolio size (live headcount) - separate from
+        // orderMetrics' order-attributed customer_count below. See
+        // catalogClient.getCustomersPerSalesman's own doc comment.
+        catalogClient.getCustomersPerSalesman(),
       ]);
 
       const orderByLoginId = new Map(orderMetrics.by_salesman.map((r) => [r.salesman_id, r]));
       const requestByLoginId = new Map(requestMetrics.map((r) => [r.salesman_id, r]));
+      const currentCustomersByLoginId = new Map(
+        customersPerSalesman.map((r) => [r.salesman_id, r.current_customer_count]));
 
       const rows = roster
         .filter((s) => s.role === "salesman")
@@ -46,6 +52,7 @@ export default async function salesmenRoutes(app: FastifyInstance) {
             order_line_count: o?.order_line_count ?? 0,
             item_quantity: o?.item_quantity ?? "0",
             customer_count: customerCount,
+            current_customer_count: currentCustomersByLoginId.get(s.login_id) ?? 0,
             orders_per_customer: customerCount ? orderCount / customerCount : null,
             // Phase 7: items/customer, items/order - pure arithmetic on data
             // already fetched above, same divide-by-zero-guard pattern as

@@ -105,6 +105,11 @@ export const categoriesSummary = [
 
 export const customersSummary = { total: 100, assigned: 60, unassigned: 40 };
 
+export const customersPerSalesman = [
+  { salesman_id: "sm_a", current_customer_count: 40 },
+  { salesman_id: "sm_b", current_customer_count: 20 },
+];
+
 export const customerDetailSummary = {
   cust_nb: "C1", customer_name: "Acme", current_salesman_id: "sm_a",
   order_count: 5, order_line_count: 12, item_quantity: "80",
@@ -199,6 +204,7 @@ export function mockAllClients(options: { dailyOrdersTrend?: typeof ordersTrend 
     getTopItems: vi.fn().mockResolvedValue(topItems),
     getCategoriesSummary: vi.fn().mockResolvedValue(categoriesSummary),
     getCustomersSummary: vi.fn().mockResolvedValue(customersSummary),
+    getCustomersPerSalesman: vi.fn().mockResolvedValue(customersPerSalesman),
     getCustomerSummary: vi.fn().mockResolvedValue(customerDetailSummary),
     getCustomerOwnershipHistory: vi.fn().mockResolvedValue(ownershipHistory),
     getItemSummary: vi.fn().mockResolvedValue(itemDetailSummary),

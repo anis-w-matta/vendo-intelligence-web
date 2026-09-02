@@ -165,6 +165,21 @@ export function getCustomersSummary(): Promise<CustomersSummaryOut> {
   return getJson<CustomersSummaryOut>(client, "/analytics/customers-summary");
 }
 
+export interface SalesmanCustomerCountOut {
+  salesman_id: string;
+  current_customer_count: number;
+}
+
+// Current portfolio size per salesman (live Customer.salesman_id headcount)
+// - deliberately separate from getSalesmenOrderMetrics' customer_count,
+// which counts only customers with an order attributed via point-in-time
+// ownership (legitimately 0 fleet-wide while no order has a resolvable
+// commit-time attribution). Found live: the Sales/Salesman pages kept
+// showing 0 customers per salesman despite real assignments existing.
+export function getCustomersPerSalesman(): Promise<SalesmanCustomerCountOut[]> {
+  return getJson<SalesmanCustomerCountOut[]>(client, "/analytics/customers-per-salesman");
+}
+
 export interface CustomerDetailSummaryOut {
   cust_nb: string;
   customer_name: string;

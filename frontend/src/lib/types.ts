@@ -46,7 +46,19 @@ export interface SalesmanRow {
   order_count: number;
   order_line_count: number;
   item_quantity: string;
+  // customer_count: distinct customers with an order attributed to this
+  // salesman via point-in-time ownership - legitimately 0 while no order
+  // has both a committed_at and a resolvable attribution. Not the same
+  // as current_customer_count below - see catalogClient.getCustomersPerSalesman's
+  // doc comment in the BFF for why these are two different, both-real metrics.
   customer_count: number;
+  // current_customer_count: live headcount of customers currently
+  // assigned to this salesman (Customer.salesman_id), independent of any
+  // order history - a current-snapshot fact, not a historical
+  // attribution claim. Found live: the Sales page showed 0 customers for
+  // every salesman despite real assignments existing, because only the
+  // order-attributed count above was ever surfaced.
+  current_customer_count: number;
   orders_per_customer: number | null;
   // Phase 7: items/customer, items/order.
   items_per_customer: number | null;
@@ -103,6 +115,9 @@ export interface SalesmanDetail {
   order_line_count: number;
   item_quantity: string;
   customer_count: number;
+  // See SalesmanRow's own comment above - the same order-attributed vs.
+  // current-headcount distinction applies here.
+  current_customer_count: number;
   // Phase 7: orders/customer, items/customer, items/order (same
   // arithmetic as SalesmanRow above).
   orders_per_customer: number | null;

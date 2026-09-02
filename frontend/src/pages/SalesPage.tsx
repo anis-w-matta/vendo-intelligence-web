@@ -19,7 +19,8 @@ const columns: Column<SalesmanRow>[] = [
   { key: "orders", header: "Orders", align: "right", render: (r) => formatNumber(r.order_count) },
   { key: "lines", header: "Order Lines", align: "right", render: (r) => formatNumber(r.order_line_count) },
   { key: "qty", header: "Item Qty", align: "right", render: (r) => formatNumber(r.item_quantity) },
-  { key: "customers", header: "Customers", align: "right", render: (r) => formatNumber(r.customer_count) },
+  { key: "current_customers", header: "Current Customers", align: "right", render: (r) => formatNumber(r.current_customer_count) },
+  { key: "customers", header: "Customers (order-attributed)", align: "right", render: (r) => formatNumber(r.customer_count) },
   { key: "opc", header: "Orders/Customer", align: "right", render: (r) => (r.orders_per_customer === null ? "—" : r.orders_per_customer.toFixed(2)) },
   { key: "ipc", header: "Items/Customer", align: "right", render: (r) => (r.items_per_customer === null ? "—" : r.items_per_customer.toFixed(2)) },
   { key: "ipo", header: "Items/Order", align: "right", render: (r) => (r.items_per_order === null ? "—" : r.items_per_order.toFixed(2)) },
@@ -41,13 +42,17 @@ export function SalesPage() {
 
       <QueryBoundary state={state} onRetry={() => setFilters({ ...filters })}>
         {(env) => {
-          // Workload vs. output (#5/#6): x = customer portfolio size
-          // (customer_count), y = order activity (order_count) - picking
-          // order_count over item_quantity as y since it's a whole-number
-          // Order count, matching the "Orders" ranking chart above, rather
-          // than a Decimal-string item quantity.
+          // Workload vs. output (#5/#6): x = current customer portfolio size
+          // (current_customer_count - live Customer.salesman_id headcount),
+          // y = order activity (order_count) - picking order_count over
+          // item_quantity as y since it's a whole-number Order count,
+          // matching the "Orders" ranking chart above, rather than a
+          // Decimal-string item quantity. current_customer_count (not the
+          // order-attributed customer_count) is used here since it reflects
+          // who a salesman actually owns today, independent of whether any
+          // of their orders have a resolvable committed_at.
           const quadrants = classifyQuadrants(
-            env.data.map((r) => ({ salesman_id: r.salesman_id, x: r.customer_count, y: r.order_count })),
+            env.data.map((r) => ({ salesman_id: r.salesman_id, x: r.current_customer_count, y: r.order_count })),
           );
           const scatterPoints = quadrants.points.map((p) => {
             const row = env.data.find((r) => r.salesman_id === p.salesman_id);
@@ -80,11 +85,11 @@ export function SalesPage() {
 
               <ChartContainer
                 title="Workload vs. Output"
-                subtitle="Each point is a salesman - customer portfolio size (x) vs. order activity (y)."
+                subtitle="Each point is a salesman - current customer portfolio size (x) vs. order activity (y)."
                 source={env.meta.source}
                 completeness={env.meta.completeness}
               >
-                <ScatterChart points={scatterPoints} xLabel="Customers" yLabel="Orders" medianX={quadrants.medianX} medianY={quadrants.medianY} />
+                <ScatterChart points={scatterPoints} xLabel="Current Customers" yLabel="Orders" medianX={quadrants.medianX} medianY={quadrants.medianY} />
                 <div className="muted" style={{ fontSize: 12, marginTop: 10 }}>
                   Quadrants are investigation signals based on today&apos;s fleet median, not performance judgments.
                 </div>

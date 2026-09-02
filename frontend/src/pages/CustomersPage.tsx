@@ -21,16 +21,17 @@ const columns: Column<TopCustomerRow>[] = [
 
 const salesmanCustomerColumns: Column<SalesmanRow>[] = [
   { key: "name", header: "Salesman", render: (r) => <Link to={`/salesmen/${r.salesman_id}`}>{r.salesman_name ?? r.salesman_id}</Link> },
-  { key: "customers", header: "Customers", align: "right", render: (r) => formatNumber(r.customer_count) },
+  { key: "customers", header: "Current Customers", align: "right", render: (r) => formatNumber(r.current_customer_count) },
 ];
 
 export function CustomersPage() {
   const [filters, setFilters] = useFilters();
   const state = useApiQuery(() => api.customers(filters), [JSON.stringify(filters)]);
-  // Reuses the existing /salesmen endpoint's customer_count per salesman
-  // (already computed by Phase 6/7) - not recomputed here, and not the
-  // fleet-wide active/inactive classification, which is a separate, larger
-  // problem left as the honest "not computed in this pass" caveat below.
+  // Reuses the existing /salesmen endpoint's current_customer_count per
+  // salesman (live Customer.salesman_id headcount, not the order-attributed
+  // customer_count) - not recomputed here, and not the fleet-wide
+  // active/inactive classification, which is a separate, larger problem
+  // left as the honest "not computed in this pass" caveat below.
   const salesmenState = useApiQuery(() => api.salesmen(filters), [JSON.stringify(filters)]);
 
   return (
@@ -83,7 +84,7 @@ export function CustomersPage() {
 
       <QueryBoundary state={salesmenState}>
         {(salesmenEnv) => {
-          const bySalesman = [...salesmenEnv.data].sort((a, b) => b.customer_count - a.customer_count);
+          const bySalesman = [...salesmenEnv.data].sort((a, b) => b.current_customer_count - a.current_customer_count);
           return (
             <div className="chart-grid" style={{ marginTop: 20 }}>
               <ChartContainer
@@ -93,8 +94,8 @@ export function CustomersPage() {
                 completenessNote={salesmenEnv.meta.completeness_note}
               >
                 <RankingChart
-                  rows={bySalesman.map((r) => ({ label: r.salesman_name ?? r.salesman_id, value: r.customer_count }))}
-                  valueLabel="Customers"
+                  rows={bySalesman.map((r) => ({ label: r.salesman_name ?? r.salesman_id, value: r.current_customer_count }))}
+                  valueLabel="Current Customers"
                 />
               </ChartContainer>
               <div className="card">

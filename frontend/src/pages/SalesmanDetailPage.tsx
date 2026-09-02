@@ -79,7 +79,7 @@ export function SalesmanDetailPage() {
               <div className="section-title">Performance</div>
               <div className="kpi-grid">
                 <KpiCard metric={statMetric("Orders", d.order_count, "orders", env.meta)} />
-                <KpiCard metric={statMetric("Customers", d.customer_count, "customers", env.meta)} />
+                <KpiCard metric={statMetric("Current Customers", d.current_customer_count, "customers", env.meta)} />
                 <KpiCard metric={statMetric("Rejection Rate", d.rejection_rate === null ? null : Math.round(d.rejection_rate * 1000) / 10, "%", env.meta)} />
                 <KpiCard metric={statMetric("Median Turnaround", d.median_turnaround_seconds, "seconds", env.meta)} />
               </div>
@@ -118,7 +118,8 @@ export function SalesmanDetailPage() {
               {/* ---- Customers ---- */}
               <div className="section-title">Customers</div>
               <div className="kpi-grid">
-                <KpiCard metric={statMetric("Customers", d.customer_count, "customers", env.meta)} />
+                <KpiCard metric={statMetric("Current Customers", d.current_customer_count, "customers", env.meta)} />
+                <KpiCard metric={statMetric("Customers (order-attributed)", d.customer_count, "customers", env.meta)} />
                 <KpiCard metric={statMetric("Orders/Customer", d.orders_per_customer === null ? null : Math.round(d.orders_per_customer * 100) / 100, "orders/customer", env.meta)} />
                 <KpiCard metric={statMetric("Items/Customer", d.items_per_customer === null ? null : Math.round(d.items_per_customer * 100) / 100, "units/customer", env.meta)} />
               </div>
