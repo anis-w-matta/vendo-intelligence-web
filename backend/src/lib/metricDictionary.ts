@@ -79,7 +79,7 @@ export const METRIC_DICTIONARY: MetricDictionaryEntry[] = [
     source: "catalog-service customer",
     filters: [],
     limitations:
-      "~40,000 legacy ERP customers were imported with no salesman assignment at all - no source of truth existed for who sells to whom, so this will never reach 100% without a manual assignment effort.",
+      "Legacy ERP-imported customers historically had no salesman assignment at all (no source of truth existed for who sells to whom at import time) - see the Data Health page's live completeness count and Known Legacy Limitations for the current actual figure, not a fixed number here, since assignments can change over time via PATCH /customers/{cust_nb}/salesman.",
   },
   {
     metric: "Duplicate Order Groups (heuristic)",

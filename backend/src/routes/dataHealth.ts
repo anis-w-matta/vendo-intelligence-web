@@ -22,6 +22,7 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
 
       const totalRequests = requests.status_counts.reduce((sum, s) => sum + s.count, 0);
       const committedRequests = requests.status_counts.find((s) => s.status === "committed")?.count ?? 0;
+      const unassignedCustomers = catalogHealth.total_customers - catalogHealth.customers_with_salesman;
 
       return reply.send(
         envelope(
@@ -79,7 +80,9 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
                 total: catalogHealth.total_customers,
                 pct: pct(catalogHealth.customers_with_salesman, catalogHealth.total_customers),
                 status: catalogHealth.customers_with_salesman === catalogHealth.total_customers ? "COMPLETE" : "PARTIAL",
-                note: "~40,000 legacy ERP customers were imported with no salesman assignment at all - see Known Legacy Limitations.",
+                note: unassignedCustomers > 0
+                  ? `${unassignedCustomers.toLocaleString()} customer(s) have no salesman assignment - see Known Legacy Limitations.`
+                  : "Every customer currently has a salesman assigned.",
               },
             },
             duplicate_orders: {
@@ -105,9 +108,20 @@ export default async function dataHealthRoutes(app: FastifyInstance) {
               },
             },
             legacy_data_limitations: [
+              // These first two describe a fixed historical fact (rows that
+              // predate Phase 2, and can never retroactively gain a
+              // committed_at/PendingLine row) - permanently true regardless
+              // of what changes going forward, safe to state unconditionally.
               "Orders committed before Phase 2 has no commit date (order_header.committed_at is NULL) and cannot be attributed to a historical salesman.",
               "Requests committed before Phase 2 shipped have no surviving PendingRequest/PendingLine row - AI-quality and turnaround data for them is permanently gone.",
-              "~40,000 legacy ERP customers start with no salesman assignment (customer.salesman_id NULL) - no source of truth existed for who sells to whom.",
+              // Unlike the two above, customer-salesman assignment CAN
+              // change (PATCH /customers/{cust_nb}/salesman) - a hardcoded
+              // claim here would silently go stale and contradict the live
+              // customers_with_salesman completeness count above the moment
+              // any assignment happened. Only ever state what's true right now.
+              ...(unassignedCustomers > 0
+                ? [`${unassignedCustomers.toLocaleString()} of ${catalogHealth.total_customers.toLocaleString()} customers currently have no salesman assignment (customer.salesman_id NULL) - typically legacy ERP-imported customers with no source of truth for who sells to whom.`]
+                : []),
             ],
             metric_dictionary: METRIC_DICTIONARY,
           },
